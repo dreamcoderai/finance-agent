@@ -1,0 +1,49 @@
+name: Deploy Finance Agent
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Copy source to server
+        env:
+          SSH_KEY: ${{ secrets.DO_SSH_KEY }}
+        run: |
+          echo "$SSH_KEY" > /tmp/deploy_key
+          chmod 600 /tmp/deploy_key
+          rsync -avz --delete \
+            --exclude='.git' \
+            --exclude='.github' \
+            --exclude='__pycache__' \
+            --exclude='*.pyc' \
+            --exclude='.env' \
+            --exclude='.venv' \
+            --exclude='venv' \
+            -e "ssh -i /tmp/deploy_key -o StrictHostKeyChecking=no -o ConnectTimeout=15" \
+            ./ \
+            root@${{ secrets.DO_HOST }}:/root/finance-agent/
+          echo "✅ source synced"
+
+      - name: Write .env and rebuild container
+        env:
+          SSH_KEY: ${{ secrets.DO_SSH_KEY }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        run: |
+          echo "$SSH_KEY" > /tmp/deploy_key
+          chmod 600 /tmp/deploy_key
+          ssh -i /tmp/deploy_key \
+            -o StrictHostKeyChecking=no \
+            -o ConnectTimeout=15 \
+            root@${{ secrets.DO_HOST }} \
+            "cd /root/finance-agent && \
+             printf 'OPENAI_API_KEY=%s\n' '$OPENAI_API_KEY' > .env && \
+             docker compose up -d --build web && \
+             docker image prune -f && \
+             echo '✅ Finance Agent deployed!'"
+          rm -f /tmp/deploy_key
