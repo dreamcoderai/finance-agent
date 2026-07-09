@@ -1,0 +1,251 @@
+                    User
+                      │
+              Finance Planner
+                      │
+    ┌──────────┬──────────┬───────────┐
+    ▼          ▼          ▼           ▼
+Stock      News      Financial    Technical
+Agent      Agent      Agent        Agent
+    │          │          │           │
+    └──────────┴──────────┴───────────┘
+                      │
+                  Report Agent
+                      │
+                Final Answer
+
+Goals - 
+
+Real-time stock prices
+Live charts
+Earnings calendar
+Insider trading alerts
+Institutional ownership
+Economic indicators (e.g., inflation, GDP, unemployment)
+Watchlists
+Email notifications
+Voice assistant
+Mobile app
+
+Technology - 
+
+Python
+OpenAI API
+Tool calling
+Agent planning
+RAG
+Vector databases
+Streamlit
+FastAPI
+PostgreSQL
+Redis
+Docker
+Background jobs
+Financial data APIs
+Prompt engineering
+Multi-agent orchestration
+
+This won't just be a chatbot—it will be a Bloomberg-inspired AI research assistant capable of gathering data, reasoning
+across multiple sources, analyzing financial information, and generating reports. It's a substantial portfolio project
+that demonstrates practical AI engineering, data integration, and financial domain knowledge.
+
+
+Step 1: Define the MVP (Minimum Viable Product)
+
+Let's build the first version with one clear goal:
+
+"Answer questions about publicly traded companies using real financial data."
+
+Example questions it should handle:
+
+"What is Apple's market cap?"
+"Compare Microsoft and Google."
+"Show Tesla's revenue growth."
+"Summarize NVIDIA."
+"What are Amazon's financial ratios?"
+
+We won't tackle news, SEC filings, or portfolio analysis yet.
+
+Step 2: Choose the stack
+
+I recommend:
+
+Component	Technology	Why
+Language	Python 3.12+	Large ecosystem
+AI	OpenAI GPT-5	Strong reasoning and tool use
+Web API	FastAPI	Lightweight and production-ready
+Frontend	Streamlit (initially)	Fast to build
+Financial Data	yfinance (start), later Finnhub/FMP	Easy prototyping
+DataFrames	pandas	Standard for finance
+Charts	Plotly	Interactive visualizations
+Config	python-dotenv	Manage secrets
+Dependency Management	uv or pip	Simple setup
+Step 3: Design the architecture
+
+Rather than putting everything in one file, we'll organize it by responsibility.
+
+finance-agent/
+│
+├── app.py                 # Streamlit UI
+├── api.py                 # FastAPI (later)
+├── config.py
+├── requirements.txt
+│
+├── agents/
+│   ├── planner.py
+│   ├── finance_agent.py
+│   └── prompts.py
+│
+├── tools/
+│   ├── stock_tool.py
+│   ├── company_tool.py
+│   ├── financial_tool.py
+│   ├── chart_tool.py
+│   └── news_tool.py
+│
+├── models/
+│   ├── company.py
+│   └── financials.py
+│
+├── services/
+│   └── market_data.py
+│
+└── tests/
+
+Each file has a single responsibility, making it easier to maintain and extend.
+
+Step 4: Build tools first
+
+Instead of asking the AI to know financial data from memory, we'll give it tools to retrieve live information.
+
+For example:
+
+get_company_info("AAPL")
+
+get_stock_price("MSFT")
+
+get_financials("NVDA")
+
+get_balance_sheet("TSLA")
+
+get_income_statement("GOOG")
+
+These functions are deterministic and testable. The AI's role is to decide which tool to use and how to explain the results.
+
+Step 5: Add the AI agent
+
+Once the tools work, we'll connect them to the model using function/tool calling. The flow will look like:
+
+User
+  │
+  ▼
+LLM
+  │
+  ├── get_company_info()
+  ├── get_stock_price()
+  ├── get_financials()
+  ▼
+Tool Results
+  ▼
+LLM
+  ▼
+Final Answer
+
+This separation keeps the system reliable and easier to debug.
+
+Step 6: Test with real questions
+
+We'll verify the agent can answer questions like:
+
+"What is Apple's market cap?"
+"Compare Microsoft and NVIDIA."
+"Show Tesla's latest revenue."
+"What sector is JPMorgan in?"
+
+Only after this works well will we add news, SEC filings, charts, and portfolio analysis.
+
+Suggested development milestones
+Foundation - Project structure, configuration, OpenAI client.
+Market Data Tools - Company info, prices, financial statements.
+AI Agent - Tool calling and conversational responses.
+Streamlit UI - Chat interface.
+Advanced Features - News, SEC filings, portfolio analysis, watchlists.
+
+Architecture Diagram - 
+
+              User
+               │
+               ▼
+          Finance Agent
+               │
+        Calls a Tool
+               │
+               ▼
+      Market Data Provider
+               │
+               ▼
+      Structured JSON Result
+               │
+               ▼
+        LLM Explanation
+
+
+Build Tool Layer - 
+
+                  User
+                  │
+                  ▼
+            Finance Agent
+                  │
+          ┌───────┼────────┐
+          ▼       ▼        ▼
+   Company Tool Stock Tool Financial Tool
+          │       │        │
+          └───────┼────────┘
+                  ▼
+         MarketDataService
+                  │
+                  ▼
+           Yahoo Finance API
+
+Agent Reasoning- 
+
+User:
+Compare Apple and Microsoft
+
+↓
+
+LLM decides:
+
+"I need company information."
+
+↓
+
+Tool Call
+
+get_company_info("AAPL")
+
+↓
+
+Tool Call
+
+get_company_info("MSFT")
+
+↓
+
+LLM compares the results
+
+↓
+
+Final answer
+
+
+
+Agent Workflow -
+
+Accept a user's question.
+Decide which tool(s) to use.
+Execute those tools.
+Feed the results back to GPT.
+Return a polished answer.
+
+
