@@ -378,19 +378,20 @@ individual ingestion -
 
 streamlit run streamlit_app.py 
 
-python database/create_catalog.py
-python database/create_schemas.py
-python database/create_bronze_tables.py
-python database/create_silver_tables.py
-python database/create_gold_tables.py
-python database/create_gold_views.py
-python ingestion/sec_ingestion.py
-python ingestion/ingestion_manager.py
-python etl/bronze_to_silver.py
-python etl/silver_to_gold.py
+Run all commands from the project root using module (-m) form.
+
+First-time setup
+python -m warehouse.create_catalog
+python -m warehouse.create_schemas
+python -m warehouse.create_bronze_tables
+python -m warehouse.create_silver_tables
+python -m warehouse.create_gold_tables
+python -m warehouse.create_gold_views
+python -m ingestion.ingestion_manager   (loads SEC symbols + all Yahoo endpoints)
+python -m etl.bronze_to_silver
+python -m etl.silver_to_gold
 
 Daily refresh (after initial setup)
-python ingestion/sec_ingestion.py (optional if you want to refresh the symbol list)
-python ingestion/ingestion_manager.py
-python etl/bronze_to_silver.py
-python etl/silver_to_gold.py
+python -m ingestion.ingestion_manager
+python -m etl.bronze_to_silver
+python -m etl.silver_to_gold
