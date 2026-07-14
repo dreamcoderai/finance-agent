@@ -34,6 +34,9 @@ jobs:
         env:
           SSH_KEY: ${{ secrets.DO_SSH_KEY }}
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          DATABRICKS_SERVER_HOSTNAME: ${{ secrets.DATABRICKS_SERVER_HOSTNAME }}
+          DATABRICKS_HTTP_PATH: ${{ secrets.DATABRICKS_HTTP_PATH }}
+          DATABRICKS_ACCESS_TOKEN: ${{ secrets.DATABRICKS_ACCESS_TOKEN }}
         run: |
           echo "$SSH_KEY" > /tmp/deploy_key
           chmod 600 /tmp/deploy_key
@@ -42,7 +45,7 @@ jobs:
             -o ConnectTimeout=15 \
             root@${{ secrets.DO_HOST }} \
             "cd /root/finance-agent && \
-             printf 'OPENAI_API_KEY=%s\n' '$OPENAI_API_KEY' > .env && \
+             printf 'OPENAI_API_KEY=%s\nDATABRICKS_SERVER_HOSTNAME=%s\nDATABRICKS_HTTP_PATH=%s\nDATABRICKS_ACCESS_TOKEN=%s\n' '$OPENAI_API_KEY' '$DATABRICKS_SERVER_HOSTNAME' '$DATABRICKS_HTTP_PATH' '$DATABRICKS_ACCESS_TOKEN' > .env && \
              docker compose up -d --build web && \
              docker image prune -f && \
              echo '✅ Finance Agent deployed!'"
