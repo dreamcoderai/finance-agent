@@ -15,6 +15,11 @@ class BronzeLoader:
     # Rows per INSERT statement for batch loads (9 params each).
     INSERT_BATCH_SIZE = 500
 
+    # Databricks rejects a parameterized query whose combined parameter size
+    # exceeds 1,048,576 chars. Payloads (price history, financials) can be
+    # large, so batches are also flushed before this threshold, with margin.
+    MAX_PARAM_CHARS = 900_000
+
     @staticmethod
     def serialize(payload: Any) -> str:
 
@@ -107,13 +112,9 @@ class BronzeLoader:
 
         single_row = "(" + ", ".join(["?"] * 9) + ")"
 
-        for start in range(0, len(rows), cls.INSERT_BATCH_SIZE):
-
-            batch = rows[start:start + cls.INSERT_BATCH_SIZE]
-
-            values_clause = ", ".join([single_row] * len(batch))
-            params = [value for record in batch for value in record]
-
+        def flush(batch_rows):
+            values_clause = ", ".join([single_row] * len(batch_rows))
+            params = [value for record in batch_rows for value in record]
             cursor.execute(
                 f"""
                 INSERT INTO {cls.TABLE}
@@ -132,6 +133,30 @@ class BronzeLoader:
                 """,
                 params,
             )
+
+        # Group rows into batches bounded by BOTH a row count and the combined
+        # parameter size (the payload dominates), so no single INSERT exceeds
+        # Databricks' parameter-size limit.
+        batch = []
+        batch_chars = 0
+
+        for row in rows:
+            # row[4] is the serialized payload; +300 covers the other columns.
+            row_chars = len(row[4] or "") + 300
+
+            if batch and (
+                batch_chars + row_chars > cls.MAX_PARAM_CHARS
+                or len(batch) >= cls.INSERT_BATCH_SIZE
+            ):
+                flush(batch)
+                batch = []
+                batch_chars = 0
+
+            batch.append(row)
+            batch_chars += row_chars
+
+        if batch:
+            flush(batch)
 
         conn.commit()
 
