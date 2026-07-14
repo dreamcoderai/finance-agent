@@ -191,7 +191,7 @@ Architecture Diagram -
 
 Build Tool Layer - 
 
-                  User
+                User
                   │
                   ▼
             Finance Agent
@@ -248,4 +248,149 @@ Execute those tools.
 Feed the results back to GPT.
 Return a polished answer.
 
+Toggle between databricks and yfinance for data retrieval.
 
+                           User
+                             │
+                             ▼
+                     Finance AI Agent
+                             │
+                    Tool Calling (GPT-5)
+                             │
+        ┌────────────────────┴────────────────────┐
+        │                                         │
+        ▼                                         ▼
+ Yahoo Finance Service                    Databricks Service
+        │                                         │
+        ▼                                         ▼
+     yfinance                          Unity Catalog
+                                               │
+                                ┌──────────────┼──────────────┐
+                                ▼              ▼              ▼
+                           Bronze          Silver         Gold
+                                │
+                         Oracle / PostgreSQL
+
+The AI agent doesn't care where the data comes from. It simply calls a service.
+
+
+
+
+Yahoo Finance      SEC EDGAR      FMP      Finnhub
+      │                │            │          │
+      └────────────────┴────────────┴──────────┘
+                       │
+                JSON Ingestion
+                       │
+                       ▼
+          Databricks Bronze (Raw JSON)
+                       │
+               Parse & Transform
+                       ▼
+          Databricks Silver (Clean)
+                       │
+             Business Logic
+                       ▼
+           Databricks Gold (AI Ready)
+                       │
+                       ▼
+               Finance AI Agent
+
+
+Provider Layer -
+
+                FinanceAgent
+                    │
+                    ▼
+              Company Tool
+                    │
+                    ▼
+                Provider
+                    │
+              ┌──────────────┐
+              ▼              ▼
+              Yahoo      Databricks
+
+JSON Ingestion -
+
+                    Source API
+                        │
+                        ▼
+                    Raw JSON
+                        │
+                        ▼
+                    Bronze
+                        │
+                        ▼
+                    Silver
+                        │
+                        ▼
+                    Gold
+                        │
+                        ▼
+                    AI Agent
+                    
+The AI agent should never read directly from Yahoo Finance in Databricks mode. It should only query the Gold layer.
+
+Bulk Ingestion -
+
+                Bulk Dataset
+                     │
+                     ▼
+            Bulk Ingestion Engine
+                     │
+                     ▼
+          Databricks Bronze (Raw)
+                     │
+                     ▼
+                  Silver
+                     │
+                     ▼
+                   Gold
+
+individual ingestion -
+
+
+                Yahoo Finance
+                      │
+                      ▼
+              yahoo_ingestion.py
+                      │
+                      │
+          Financial Modeling Prep (FMP)
+                      │
+                      ▼
+               fmp_ingestion.py
+                      │
+                      │
+                    SEC EDGAR
+                      │
+                      ▼
+               sec_ingestion.py
+                      │
+                      │
+                      ▼
+               bronze_loader.py
+                      │
+                      ▼
+      finance_catalog.bronze.raw_api_data
+
+
+streamlit run streamlit_app.py 
+
+python database/create_catalog.py
+python database/create_schemas.py
+python database/create_bronze_tables.py
+python database/create_silver_tables.py
+python database/create_gold_tables.py
+python database/create_gold_views.py
+python ingestion/sec_ingestion.py
+python ingestion/ingestion_manager.py
+python etl/bronze_to_silver.py
+python etl/silver_to_gold.py
+
+Daily refresh (after initial setup)
+python ingestion/sec_ingestion.py (optional if you want to refresh the symbol list)
+python ingestion/ingestion_manager.py
+python etl/bronze_to_silver.py
+python etl/silver_to_gold.py

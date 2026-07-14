@@ -1,8 +1,5 @@
-from services import market_data_service
+from services.financial_data_provider import financial_data_provider as provider
 
 
 def get_company_info(symbol: str):
-    """
-    Returns company profile information.
-    """
-    return market_data_service.get_company_info(symbol)
+    return provider.get_company_info(symbol)
