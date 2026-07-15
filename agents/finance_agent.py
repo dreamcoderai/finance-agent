@@ -297,3 +297,13 @@ Responsibilities:
         """Reset conversation while keeping the system prompt."""
 
         self.messages = [self.messages[0]]
+
+
+def ask_finance_agent(question: str) -> str:
+    """
+    One-shot convenience helper: ask a single question with a fresh agent
+    and return the answer. For multi-turn conversations, use FinanceAgent
+    directly so history is retained.
+    """
+
+    return FinanceAgent().ask(question)

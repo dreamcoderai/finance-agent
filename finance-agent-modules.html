@@ -1,0 +1,260 @@
+<title>finance-agent — Module Reference</title>
+<style>
+  :root {
+    --bg: #f6f4f0; --surface: #ffffff; --surface-2: #efece6; --text: #201d19;
+    --muted: #6c6862; --border: #e4ded4;
+    --bronze: #9c5a2c; --silver: #566072; --gold: #8f6d10;
+    --accent: #0d7a72; --accent-soft: #dbeeeb;
+    --shadow: 0 1px 2px rgba(30,25,20,.05), 0 8px 22px rgba(30,25,20,.05);
+    --mono: ui-monospace, "SF Mono", Menlo, "Cascadia Mono", "Roboto Mono", monospace;
+    --sans: system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #111214; --surface: #1a1c20; --surface-2: #22252a; --text: #ecebe8;
+      --muted: #97958f; --border: #2c2f35;
+      --bronze: #d68f57; --silver: #aeb6c2; --gold: #e3bd52;
+      --accent: #2dd4bf; --accent-soft: #142826;
+      --shadow: 0 1px 2px rgba(0,0,0,.3), 0 10px 28px rgba(0,0,0,.32);
+    }
+  }
+  :root[data-theme="light"] {
+    --bg:#f6f4f0;--surface:#fff;--surface-2:#efece6;--text:#201d19;--muted:#6c6862;--border:#e4ded4;
+    --bronze:#9c5a2c;--silver:#566072;--gold:#8f6d10;--accent:#0d7a72;--accent-soft:#dbeeeb;
+    --shadow:0 1px 2px rgba(30,25,20,.05),0 8px 22px rgba(30,25,20,.05);
+  }
+  :root[data-theme="dark"] {
+    --bg:#111214;--surface:#1a1c20;--surface-2:#22252a;--text:#ecebe8;--muted:#97958f;--border:#2c2f35;
+    --bronze:#d68f57;--silver:#aeb6c2;--gold:#e3bd52;--accent:#2dd4bf;--accent-soft:#142826;
+    --shadow:0 1px 2px rgba(0,0,0,.3),0 10px 28px rgba(0,0,0,.32);
+  }
+
+  * { box-sizing: border-box; }
+  body { margin:0; background:var(--bg); color:var(--text); font-family:var(--sans); line-height:1.55; -webkit-font-smoothing:antialiased; }
+  .wrap { max-width: 880px; margin: 0 auto; padding: clamp(24px,5vw,56px) clamp(16px,4vw,30px) 90px; }
+
+  .eyebrow { font-family:var(--mono); font-size:12px; letter-spacing:.16em; text-transform:uppercase; color:var(--accent); margin:0 0 12px; }
+  h1 { font-size: clamp(30px,6vw,46px); font-weight:680; letter-spacing:-.025em; margin:0 0 14px; text-wrap:balance; }
+  .thesis { font-size: clamp(16px,2.4vw,19px); color:var(--muted); max-width:62ch; margin:0 0 22px; text-wrap:balance; }
+
+  /* Pipeline order strip */
+  .order { display:flex; flex-wrap:wrap; align-items:center; gap:8px; margin: 4px 0 0; }
+  .order .o { font-family:var(--mono); font-size:12px; padding:4px 10px; border:1px solid var(--border); border-radius:999px; background:var(--surface); }
+  .order .sep { color:var(--muted); }
+
+  section { margin-top: clamp(44px,7vw,64px); }
+  .layer-head { display:flex; align-items:baseline; gap:12px; flex-wrap:wrap; margin: 0 0 6px; }
+  .layer-num { font-family:var(--mono); font-size:13px; color:var(--accent); font-weight:600; }
+  h2 { font-size: clamp(21px,3.4vw,28px); font-weight:660; letter-spacing:-.02em; margin:0; }
+  .layer-dir { font-family:var(--mono); font-size:13px; color:var(--muted); }
+  .layer-desc { color:var(--muted); font-size:15px; margin: 6px 0 20px; max-width: 64ch; }
+
+  .mods { display:flex; flex-direction:column; gap:14px; }
+  .mod { background:var(--surface); border:1px solid var(--border); border-left:3px solid var(--accent); border-radius:12px; padding:15px 18px; box-shadow:var(--shadow); }
+  .mod.bronze { border-left-color: var(--bronze); }
+  .mod.silver { border-left-color: var(--silver); }
+  .mod.gold { border-left-color: var(--gold); }
+  .mod-top { display:flex; align-items:baseline; justify-content:space-between; gap:12px; flex-wrap:wrap; margin-bottom:6px; }
+  .path { font-family:var(--mono); font-size:13.5px; font-weight:600; color:var(--text); }
+  .cls { font-family:var(--mono); font-size:12px; color:var(--accent); background:var(--accent-soft); padding:2px 8px; border-radius:6px; white-space:nowrap; }
+  .mod p { margin:0 0 10px; font-size:14.5px; color:var(--muted); }
+  .mod p .hl { color:var(--text); font-weight:600; }
+  .api { display:flex; flex-wrap:wrap; gap:6px; }
+  .api .m { font-family:var(--mono); font-size:11.5px; padding:3px 8px; border-radius:6px; background:var(--surface-2); border:1px solid var(--border); color:var(--text); }
+  .api .lab { font-family:var(--mono); font-size:11px; letter-spacing:.06em; text-transform:uppercase; color:var(--muted); align-self:center; margin-right:2px; }
+
+  .note { margin-top:10px; font-size:13px; color:var(--muted); border-top:1px dashed var(--border); padding-top:9px; }
+  .note b { color:var(--text); font-weight:600; }
+  code { font-family:var(--mono); font-size:.86em; background:var(--surface-2); padding:1px 5px; border-radius:5px; }
+
+  footer { margin-top:64px; padding-top:22px; border-top:1px solid var(--border); font-size:13px; color:var(--muted); display:flex; flex-wrap:wrap; gap:8px 16px; }
+  footer .k { font-family:var(--mono); color:var(--text); }
+</style>
+
+<div class="wrap">
+  <header>
+    <p class="eyebrow">Codebase · module reference</p>
+    <h1>finance-agent modules</h1>
+    <p class="thesis">Every module in the pipeline, layer by layer — what it does, its key classes and methods, and how it connects to the tiers around it.</p>
+    <div class="order">
+      <span class="o">warehouse/</span><span class="sep">→</span>
+      <span class="o">ingestion/</span><span class="sep">→</span>
+      <span class="o">etl/</span><span class="sep">→</span>
+      <span class="o">services/</span><span class="sep">→</span>
+      <span class="o">tools/</span><span class="sep">→</span>
+      <span class="o">agents/</span><span class="sep">→</span>
+      <span class="o">streamlit_app</span>
+    </div>
+  </header>
+
+  <!-- WAREHOUSE -->
+  <section>
+    <div class="layer-head"><span class="layer-num">01</span><h2>Warehouse setup</h2><span class="layer-dir">warehouse/</span></div>
+    <p class="layer-desc">One-time Databricks DDL that builds the catalog, schemas, and every table + view. Run with <code>python -m warehouse.&lt;name&gt;</code>. All idempotent (<code>CREATE ... IF NOT EXISTS</code>).</p>
+    <div class="mods">
+      <div class="mod gold">
+        <div class="mod-top"><span class="path">create_catalog.py</span><span class="cls">create_catalog()</span></div>
+        <p>Creates the <span class="hl">finance_catalog</span> Unity Catalog namespace that everything else lives under.</p>
+      </div>
+      <div class="mod gold">
+        <div class="mod-top"><span class="path">create_schemas.py</span><span class="cls">create_schemas()</span></div>
+        <p>Creates the schemas: <span class="hl">bronze, silver, gold</span> (plus reference, analytics).</p>
+      </div>
+      <div class="mod bronze">
+        <div class="mod-top"><span class="path">create_bronze_tables.py</span><span class="cls">create_bronze_tables()</span></div>
+        <p>Creates <span class="hl">bronze.raw_api_data</span> — the single raw landing table.</p>
+        <div class="api"><span class="lab">columns</span><span class="m">id (identity)</span><span class="m">source</span><span class="m">endpoint</span><span class="m">symbol</span><span class="m">ingest_time</span><span class="m">payload</span><span class="m">payload_hash</span><span class="m">processing_status</span></div>
+        <div class="note"><b>payload_hash</b> drives change-based dedup; the table enables <code>delta.feature.allowColumnDefaults</code>.</div>
+      </div>
+      <div class="mod silver">
+        <div class="mod-top"><span class="path">create_silver_tables.py</span><span class="cls">create_silver_tables()</span></div>
+        <p>Creates the 10 normalized Silver tables.</p>
+        <div class="api"><span class="m">symbols</span><span class="m">company_profile</span><span class="m">stock_price</span><span class="m">historical_prices</span><span class="m">income_statement</span><span class="m">balance_sheet</span><span class="m">cash_flow</span><span class="m">quarterly_*</span></div>
+      </div>
+      <div class="mod gold">
+        <div class="mod-top"><span class="path">create_gold_tables.py</span><span class="cls">create_gold_tables()</span></div>
+        <p>Creates Gold mirror tables via <code>CREATE TABLE gold.X AS SELECT * FROM silver.X WHERE 1=0</code> — so Gold's schema always matches Silver exactly.</p>
+        <div class="note">Note the one rename: Gold's <b>stock_prices</b> mirrors Silver's <b>historical_prices</b>.</div>
+      </div>
+      <div class="mod gold">
+        <div class="mod-top"><span class="path">create_gold_views.py</span><span class="cls">create_gold_views()</span></div>
+        <p>Creates analytics views over the Gold tables.</p>
+        <div class="api"><span class="m">v_company_snapshot</span><span class="m">v_market_snapshot</span><span class="m">v_financial_summary</span><span class="m">v_daily_returns</span><span class="m">v_top_companies</span><span class="m">v_moving_average</span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- INGESTION -->
+  <section>
+    <div class="layer-head"><span class="layer-num">02</span><h2>Ingestion</h2><span class="layer-dir">ingestion/</span></div>
+    <p class="layer-desc">Fetches from the sources and writes raw payloads into Bronze. Resumable, throttled, batched — designed to survive an ~84,000-call job.</p>
+    <div class="mods">
+      <div class="mod">
+        <div class="mod-top"><span class="path">ingestion_manager.py</span><span class="cls">IngestionManager</span></div>
+        <p>The pipeline <span class="hl">entry point</span>. <code>run(limit)</code> loads SEC symbols, then delegates all Yahoo endpoints to the batch engine.</p>
+        <div class="api"><span class="lab">methods</span><span class="m">run()</span><span class="m">ingest_sec_symbols()</span><span class="m">ingest_yahoo()</span></div>
+      </div>
+      <div class="mod">
+        <div class="mod-top"><span class="path">sec_ingestion.py</span><span class="cls">SECIngestion</span></div>
+        <p>Loads the SEC ticker master into <span class="hl">silver.symbols</span> (full refresh, batched 500 rows/insert).</p>
+        <div class="api"><span class="lab">methods</span><span class="m">ingest_symbols()</span></div>
+      </div>
+      <div class="mod">
+        <div class="mod-top"><span class="path">batch_ingestion.py</span><span class="cls">BatchIngestor</span></div>
+        <p>The all-endpoints <span class="hl">engine</span>. Defines the 9 Yahoo endpoints, then for each: skip already-ingested symbols (resume), fetch concurrently with retry/backoff, and bulk-write to Bronze.</p>
+        <div class="api"><span class="lab">methods</span><span class="m">run(limit)</span><span class="m">run_endpoint()</span><span class="m">_process_chunk()</span><span class="m">_fetch_one()</span><span class="m">_write_batch()</span><span class="m">endpoints()</span></div>
+        <div class="note"><b>Resumable</b> · <b>throttled</b> (4 workers + delay + backoff) · <b>batched</b>. Run one instance at a time.</div>
+      </div>
+      <div class="mod bronze">
+        <div class="mod-top"><span class="path">bronze_loader.py</span><span class="cls">BronzeLoader</span></div>
+        <p>The <span class="hl">write layer</span> to Bronze. Serializes payloads (dict → JSON, DataFrame → <code>reset_index().to_json</code>), hashes them, and inserts.</p>
+        <div class="api"><span class="lab">methods</span><span class="m">serialize()</span><span class="m">hash_payload()</span><span class="m">get_ingested_symbols()</span><span class="m">insert_batch()</span><span class="m">load()</span></div>
+        <div class="note"><b>hash_payload</b> = SHA-256 for change-dedup · <b>get_ingested_symbols</b> powers resume · <b>insert_batch</b> is size-aware (flushes at 900 KB / 500 rows to stay under Databricks' 1 MB param limit).</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ETL -->
+  <section>
+    <div class="layer-head"><span class="layer-num">03</span><h2>ETL</h2><span class="layer-dir">etl/</span></div>
+    <p class="layer-desc">Refines the data tier to tier. Both are full-refresh (DELETE + batched insert) — run one at a time.</p>
+    <div class="mods">
+      <div class="mod silver">
+        <div class="mod-top"><span class="path">bronze_to_silver.py</span><span class="cls">BronzeToSilverETL</span></div>
+        <p>Parses Bronze JSON into the 9 typed Silver tables. Takes the <span class="hl">latest snapshot per symbol</span> (via <code>ROW_NUMBER()</code>) and melts financial statements into long format (year · metric · value).</p>
+        <div class="api"><span class="lab">methods</span><span class="m">run()</span><span class="m">_latest_bronze()</span><span class="m">_refresh_table()</span><span class="m">load_company_profiles()</span><span class="m">load_historical_prices()</span><span class="m">load_income_statement()</span><span class="m">…</span></div>
+        <div class="note">Inserts use explicit <code>CAST(? AS type)</code> per column to avoid multi-row inline-table type errors.</div>
+      </div>
+      <div class="mod gold">
+        <div class="mod-top"><span class="path">silver_to_gold.py</span><span class="cls">SilverToGoldETL</span></div>
+        <p>Publishes Gold by copying each Silver table 1:1 (<code>INSERT INTO gold SELECT * FROM silver</code>). Gold is the only layer the app reads.</p>
+        <div class="api"><span class="lab">methods</span><span class="m">run()</span><span class="m">refresh_table()</span><span class="m">load_company_profile()</span><span class="m">load_stock_prices()</span><span class="m">…</span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SERVICES -->
+  <section>
+    <div class="layer-head"><span class="layer-num">04</span><h2>Services</h2><span class="layer-dir">services/</span></div>
+    <p class="layer-desc">The data-access layer. Connectors, the two backends (Databricks &amp; Yahoo), and the provider that unifies them with source tracking.</p>
+    <div class="mods">
+      <div class="mod">
+        <div class="mod-top"><span class="path">databricks_connection.py</span><span class="cls">DatabricksConnection</span></div>
+        <p>Singleton SQL connection — <code>sql.connect(server_hostname, http_path, access_token)</code> from env vars. Exposed as <code>databricks_connection</code>.</p>
+        <div class="api"><span class="lab">methods</span><span class="m">get_connection()</span></div>
+      </div>
+      <div class="mod">
+        <div class="mod-top"><span class="path">databricks_service.py</span><span class="cls">DatabricksService</span></div>
+        <p>Reads the <span class="hl">Gold tables</span> via SQL, one method per data type.</p>
+        <div class="api"><span class="lab">methods</span><span class="m">get_company_info()</span><span class="m">get_stock_price()</span><span class="m">get_historical_prices()</span><span class="m">get_income_statement()</span><span class="m">get_balance_sheet()</span><span class="m">get_cash_flow()</span><span class="m">get_quarterly_*()</span></div>
+      </div>
+      <div class="mod">
+        <div class="mod-top"><span class="path">market_data.py</span><span class="cls">MarketDataService</span></div>
+        <p>The <span class="hl">yfinance wrapper</span> — the live Yahoo backend. Same method surface as DatabricksService, so they're interchangeable.</p>
+        <div class="api"><span class="lab">methods</span><span class="m">get_company_info()</span><span class="m">get_stock_price()</span><span class="m">get_historical_prices()</span><span class="m">get_income_statement()</span><span class="m">…</span></div>
+      </div>
+      <div class="mod">
+        <div class="mod-top"><span class="path">financial_data_provider.py</span><span class="cls">FinancialDataProvider</span></div>
+        <p>The <span class="hl">unifier</span>. AUTO mode tries Databricks first, falls back to Yahoo when Gold has no row — and records which backend served each call. Shared singleton used by all tools.</p>
+        <div class="api"><span class="lab">methods</span><span class="m">_fetch()</span><span class="m">set_source()</span><span class="m">reset_tracking()</span><span class="m">sources_summary()</span><span class="m">get_* (all data types)</span></div>
+        <div class="note">Modes: <b>AUTO</b> (Databricks → Yahoo) · <b>DATABRICKS</b> · <b>YAHOO</b>. Provenance surfaces as the source badge in the UI.</div>
+      </div>
+      <div class="mod">
+        <div class="mod-top"><span class="path">symbol_service.py</span><span class="cls">SymbolService</span></div>
+        <p>Reads the symbol master from <span class="hl">silver.symbols</span> — the source of the ingestion work-list.</p>
+        <div class="api"><span class="lab">methods</span><span class="m">get_active_symbols()</span><span class="m">get_symbol()</span><span class="m">get_all_symbols()</span></div>
+      </div>
+      <div class="mod">
+        <div class="mod-top"><span class="path">sec_service.py</span><span class="cls">SECService</span></div>
+        <p>Fetches SEC's <code>company_tickers.json</code> and returns a DataFrame of <span class="hl">cik · symbol · company_name</span>.</p>
+        <div class="api"><span class="lab">methods</span><span class="m">get_company_tickers()</span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- TOOLS -->
+  <section>
+    <div class="layer-head"><span class="layer-num">05</span><h2>Tools</h2><span class="layer-dir">tools/</span></div>
+    <p class="layer-desc">Thin functions that wrap the shared provider — these are what the agent actually calls. Each returns clean data (dict or DataFrame) with provenance recorded.</p>
+    <div class="mods">
+      <div class="mod">
+        <div class="mod-top"><span class="path">company_tool.py</span><span class="cls">functions</span></div>
+        <div class="api"><span class="m">get_company_info(symbol)</span></div>
+      </div>
+      <div class="mod">
+        <div class="mod-top"><span class="path">stock_tool.py</span><span class="cls">functions</span></div>
+        <div class="api"><span class="m">get_stock_price(symbol)</span><span class="m">get_historical_prices(symbol, period, interval)</span></div>
+      </div>
+      <div class="mod">
+        <div class="mod-top"><span class="path">financial_tool.py</span><span class="cls">functions</span></div>
+        <div class="api"><span class="m">get_income_statement</span><span class="m">get_balance_sheet</span><span class="m">get_cash_flow</span><span class="m">get_quarterly_income_statement</span><span class="m">get_quarterly_balance_sheet</span><span class="m">get_quarterly_cash_flow</span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- AGENT + APP -->
+  <section>
+    <div class="layer-head"><span class="layer-num">06</span><h2>Agent &amp; app</h2><span class="layer-dir">agents/ · streamlit_app.py</span></div>
+    <p class="layer-desc">The reasoning layer and the interface a user actually touches.</p>
+    <div class="mods">
+      <div class="mod">
+        <div class="mod-top"><span class="path">agents/finance_agent.py</span><span class="cls">FinanceAgent</span></div>
+        <p>Wraps <span class="hl">GPT-5</span> (<code>MODEL = "gpt-5"</code>) with the 9 tools as function schemas. <code>ask()</code> runs an agentic loop — call tools, read results, decide, repeat (up to 6 rounds) — then answers with real figures.</p>
+        <div class="api"><span class="lab">methods</span><span class="m">ask()</span><span class="m">_run_tool()</span><span class="m">_serialize_result()</span><span class="m">set_data_source()</span><span class="m">get_last_sources()</span><span class="m">clear_history()</span></div>
+      </div>
+      <div class="mod">
+        <div class="mod-top"><span class="path">streamlit_app.py</span><span class="cls">Streamlit UI</span></div>
+        <p>The chat interface. Sidebar <span class="hl">data-source toggle</span> (Auto / Databricks / Yahoo) drives <code>set_data_source</code>; each answer shows a <span class="hl">source badge</span> built from the provider's tracking.</p>
+        <div class="api"><span class="lab">helpers</span><span class="m">format_source_badge()</span><span class="m">DATA_SOURCE_MODES</span></div>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    <span class="k">finance-agent</span>
+    <span>·</span>
+    <span>warehouse → ingestion → etl → services → tools → agent → app</span>
+    <span>·</span>
+    <span class="k">utils/</span><span>reserved (empty) for shared constants &amp; logging</span>
+  </footer>
+</div>
