@@ -8,7 +8,7 @@ st.set_page_config(
     layout="wide"
 )
 
-st.title("💰 Finance AI Assistant for state street")
+st.title("💰 Finance AI Assistant")
 st.caption("Ask questions about publicly traded companies.")
 
 
