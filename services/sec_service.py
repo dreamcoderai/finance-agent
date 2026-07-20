@@ -9,7 +9,7 @@ class SECService:
     )
 
     HEADERS = {
-        "User-Agent": "Finance AI Agent (your-email@example.com)"
+        "User-Agent": "Finance AI Agent (codingthedreams@gmail.com)"
     }
 
     def get_company_tickers(self) -> pd.DataFrame:

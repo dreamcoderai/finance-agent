@@ -375,7 +375,55 @@ individual ingestion -
                       ▼
       finance_catalog.bronze.raw_api_data
 
+Final Architecture Diagram -
 
+                       ┌─────────────────────┐   ┌─────────────────────────┐
+   SOURCES       │ SEC company_tickers │   │ Yahoo Finance (yfinance)│
+                 └──────────┬──────────┘   └────────────┬────────────┘
+                            └──────────────┬────────────┘
+                                           ▼
+              ┌──────────────────────────────────────────────────────┐
+   INGESTION  │ ingestion_manager                                     │
+   ingestion/ │   • sec_ingestion   → silver.symbols  (batched)       │
+              │   • batch_ingestion → all 9 Yahoo endpoints           │
+              │                       (resumable · throttled · batched)│
+              │   • bronze_loader   → SHA-256 change-dedup            │
+              └───────────────────────────┬──────────────────────────┘
+                                          ▼
+              ┌──────────────────────────────────────────────────────┐
+   ◆ BRONZE   │ finance_catalog.bronze.raw_api_data                   │
+              │ raw API JSON · append-only · full history             │
+              └───────────────────────────┬──────────────────────────┘
+                                          │  etl/bronze_to_silver
+                                          ▼
+              ┌──────────────────────────────────────────────────────┐
+   ◆ SILVER   │ finance_catalog.silver.*                              │
+              │ company_profile · stock_price · historical_prices     │
+              │ income/balance/cash_flow · quarterly_*                │
+              │ typed · latest-per-symbol · long-format financials    │
+              └───────────────────────────┬──────────────────────────┘
+                                          │  etl/silver_to_gold
+                                          ▼
+              ┌──────────────────────────────────────────────────────┐
+   ◆ GOLD     │ finance_catalog.gold.*   (only layer the app reads)   │
+              │ mirror tables + views: v_top_companies,               │
+              │ v_moving_average, v_daily_returns, v_company_snapshot  │
+              └───────────────────────────┬──────────────────────────┘
+                                          │  read
+════════════════════════════════════════ │ ═══════════════════════════  RUNTIME
+                                          ▼
+  User ─► Streamlit chat ─► FinanceAgent (GPT-5, 9 tools) ─► tools/ ─► FinancialDataProvider [AUTO]
+                                                                          │
+                                                    1·primary ───────────┤
+                                                    DatabricksService ─► gold.*
+                                                                          │
+                                                    2·fallback (if empty)─┘
+                                                    MarketDataService ─► yfinance
+                                          ▼
+  User ◄── Answer + source badge  (🟢 Databricks / 🟡 Yahoo / ⚠️ not found)
+
+
+142.93.222.199
 streamlit run streamlit_app.py 
 
 Run all commands from the project root using module (-m) form.
@@ -395,3 +443,92 @@ Daily refresh (after initial setup)
 python -m ingestion.ingestion_manager
 python -m etl.bronze_to_silver
 python -m etl.silver_to_gold
+
+
+
+
+xdata_core_reference/
+│
+├── main.py
+│
+├── config/
+│   ├── __init__.py
+│   ├── constants.py
+│   └── settings.py
+│
+├── common/
+│   ├── __init__.py
+│   ├── logger.py
+│   └── exceptions.py
+│
+├── database/
+│   ├── __init__.py
+│   ├── databricks_connection.py
+│   └── sql_executor.py
+│
+├── orchestration/
+│   ├── __init__.py
+│   └── master_pipeline.py
+│
+├── domains/
+│   ├── __init__.py
+│   │
+│   └── contact/
+│       ├── __init__.py
+│       ├── pipeline.py
+│       │
+│       ├── bronze/
+│       │   ├── __init__.py
+│       │   ├── bronze_pipeline.py
+│       │   └── ingest_contact.py
+│       │
+│       ├── silver/
+│       │   ├── __init__.py
+│       │   ├── silver_pipeline.py
+│       │   │
+│       │   ├── hub/
+│       │   │   ├── __init__.py
+│       │   │   ├── hub_company.py
+│       │   │   ├── hub_contracting_entity.py
+│       │   │   ├── hub_enterprise_contact.py
+│       │   │   ├── hub_esa_contact.py
+│       │   │   └── hub_sf_contact.py
+│       │   │
+│       │   ├── link/
+│       │   │   ├── __init__.py
+│       │   │   ├── lnk_company_contact.py
+│       │   │   ├── lnk_contracting_entity_contact.py
+│       │   │   ├── lnk_esa_enterprise_contact.py
+│       │   │   └── lnk_sf_enterprise_contact.py
+│       │   │
+│       │   └── satellite/
+│       │       ├── __init__.py
+│       │       ├── sat_company_contact_relationship.py
+│       │       ├── sat_contact.py
+│       │       ├── sat_contracting_entity.py
+│       │       ├── sat_contracting_entity_contact_relationship.py
+│       │       ├── sat_employee.py
+│       │       ├── sat_enterprise_contact.py
+│       │       ├── sat_esa_enterprise_contact.py
+│       │       ├── sat_sf_contact.py
+│       │       ├── sat_sf_contact_address.py
+│       │       ├── sat_sf_contact_communication.py
+│       │       ├── sat_sf_enterprise_contact.py
+│       │       └── sat_contractor.py
+│       │
+│       ├── gold/
+│       │   ├── __init__.py
+│       │   ├── gold_pipeline.py
+│       │   └── gold_contact.py
+│       │
+│       └── validation/
+│           ├── __init__.py
+│           └── contact_validation.py
+│
+├── tests/
+│   ├── __init__.py
+│   ├── test_connection.py
+│   ├── test_sql_executor.py
+│   └── test_contact_pipeline.py
+│
+└── requirements.txt
