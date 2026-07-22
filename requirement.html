@@ -532,3 +532,101 @@ xdata_core_reference/
 │   └── test_contact_pipeline.py
 │
 └── requirements.txt
+
+from unittest.mock import MagicMock, patch
+
+import pytest
+
+from common.exceptions import SQLExecutionError
+from database.sql_executor import SQLExecutor
+
+
+@patch("database.sql_executor.DatabricksConnection")
+def test_execute_success(mock_connection):
+    mock_cursor = MagicMock()
+    mock_connection.return_value.get_connection.return_value.cursor.return_value.__enter__.return_value = mock_cursor
+
+    executor = SQLExecutor()
+
+    executor.execute("SELECT 1")
+
+    mock_cursor.execute.assert_called_once_with("SELECT 1", {})
+
+
+@patch("database.sql_executor.DatabricksConnection")
+def test_fetch_one(mock_connection):
+    mock_cursor = MagicMock()
+    mock_cursor.fetchone.return_value = ("A",)
+
+    mock_connection.return_value.get_connection.return_value.cursor.return_value.__enter__.return_value = mock_cursor
+
+    executor = SQLExecutor()
+
+    result = executor.fetch_one("SELECT 'A'")
+
+    assert result == ("A",)
+    mock_cursor.execute.assert_called_once()
+
+
+@patch("database.sql_executor.DatabricksConnection")
+def test_fetch_all(mock_connection):
+    mock_cursor = MagicMock()
+    mock_cursor.fetchall.return_value = [("A",), ("B",)]
+
+    mock_connection.return_value.get_connection.return_value.cursor.return_value.__enter__.return_value = mock_cursor
+
+    executor = SQLExecutor()
+
+    result = executor.fetch_all("SELECT * FROM table")
+
+    assert len(result) == 2
+
+
+@patch("database.sql_executor.DatabricksConnection")
+def test_execute_sql_exception(mock_connection):
+    mock_cursor = MagicMock()
+    mock_cursor.execute.side_effect = Exception("SQL Error")
+
+    mock_connection.return_value.get_connection.return_value.cursor.return_value.__enter__.return_value = mock_cursor
+
+    executor = SQLExecutor()
+
+    with pytest.raises(SQLExecutionError):
+        executor.execute("SELECT 1")
+
+
+@patch("database.sql_executor.DatabricksConnection")
+def test_table_exists(mock_connection):
+    mock_cursor = MagicMock()
+    mock_cursor.fetchall.return_value = [("hub_company",)]
+
+    mock_connection.return_value.get_connection.return_value.cursor.return_value.__enter__.return_value = mock_cursor
+
+    executor = SQLExecutor()
+
+    assert executor.table_exists("catalog", "silver", "hub_company") is True
+
+
+@patch("database.sql_executor.DatabricksConnection")
+def test_table_not_exists(mock_connection):
+    mock_cursor = MagicMock()
+    mock_cursor.fetchall.return_value = []
+
+    mock_connection.return_value.get_connection.return_value.cursor.return_value.__enter__.return_value = mock_cursor
+
+    executor = SQLExecutor()
+
+    assert executor.table_exists("catalog", "silver", "hub_company") is False
+
+
+@patch("database.sql_executor.DatabricksConnection")
+def test_close_connection(mock_connection):
+    mock_conn = MagicMock()
+
+    mock_connection.return_value.get_connection.return_value = mock_conn
+
+    executor = SQLExecutor()
+
+    executor.close()
+
+    mock_conn.close.assert_called_once()
