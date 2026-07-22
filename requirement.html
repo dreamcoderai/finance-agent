@@ -533,39 +533,12 @@ xdata_core_reference/
 │
 └── requirements.txt
 
-MERGE INTO ${CATALOG}.silver.hub_company AS target
+# Catalog
+CATALOG = "dpe0421_dev_xdata"
 
-USING (
-
-    SELECT DISTINCT
-
-        company_hk,
-        company_bk,
-        load_date,
-        record_source
-
-    FROM ${CATALOG}.bronze.vw_company
-
-) source
-
-ON target.company_hk = source.company_hk
-
-WHEN NOT MATCHED THEN
-
-INSERT (
-
-    company_hk,
-    company_bk,
-    load_date,
-    record_source
-
-)
-
-VALUES (
-
-    source.company_hk,
-    source.company_bk,
-    source.load_date,
-    source.record_source
-
-);
+# Schemas
+BRONZE_SCHEMA = "dbs_xdata_bronze"
+SILVER_SCHEMA = "dbs_xdata_silver"
+GOLD_SCHEMA = "dbs_xdata_gold"
+MODEL_SCHEMA = "dbs_xdata_model"
+CONTEXT_SCHEMA = "dbs_xdata_context"
