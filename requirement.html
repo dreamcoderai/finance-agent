@@ -533,100 +533,39 @@ xdata_core_reference/
 │
 └── requirements.txt
 
-from unittest.mock import MagicMock, patch
+MERGE INTO ${CATALOG}.silver.hub_company AS target
 
-import pytest
+USING (
 
-from common.exceptions import SQLExecutionError
-from database.sql_executor import SQLExecutor
+    SELECT DISTINCT
 
+        company_hk,
+        company_bk,
+        load_date,
+        record_source
 
-@patch("database.sql_executor.DatabricksConnection")
-def test_execute_success(mock_connection):
-    mock_cursor = MagicMock()
-    mock_connection.return_value.get_connection.return_value.cursor.return_value.__enter__.return_value = mock_cursor
+    FROM ${CATALOG}.bronze.vw_company
 
-    executor = SQLExecutor()
+) source
 
-    executor.execute("SELECT 1")
+ON target.company_hk = source.company_hk
 
-    mock_cursor.execute.assert_called_once_with("SELECT 1", {})
+WHEN NOT MATCHED THEN
 
+INSERT (
 
-@patch("database.sql_executor.DatabricksConnection")
-def test_fetch_one(mock_connection):
-    mock_cursor = MagicMock()
-    mock_cursor.fetchone.return_value = ("A",)
+    company_hk,
+    company_bk,
+    load_date,
+    record_source
 
-    mock_connection.return_value.get_connection.return_value.cursor.return_value.__enter__.return_value = mock_cursor
+)
 
-    executor = SQLExecutor()
+VALUES (
 
-    result = executor.fetch_one("SELECT 'A'")
+    source.company_hk,
+    source.company_bk,
+    source.load_date,
+    source.record_source
 
-    assert result == ("A",)
-    mock_cursor.execute.assert_called_once()
-
-
-@patch("database.sql_executor.DatabricksConnection")
-def test_fetch_all(mock_connection):
-    mock_cursor = MagicMock()
-    mock_cursor.fetchall.return_value = [("A",), ("B",)]
-
-    mock_connection.return_value.get_connection.return_value.cursor.return_value.__enter__.return_value = mock_cursor
-
-    executor = SQLExecutor()
-
-    result = executor.fetch_all("SELECT * FROM table")
-
-    assert len(result) == 2
-
-
-@patch("database.sql_executor.DatabricksConnection")
-def test_execute_sql_exception(mock_connection):
-    mock_cursor = MagicMock()
-    mock_cursor.execute.side_effect = Exception("SQL Error")
-
-    mock_connection.return_value.get_connection.return_value.cursor.return_value.__enter__.return_value = mock_cursor
-
-    executor = SQLExecutor()
-
-    with pytest.raises(SQLExecutionError):
-        executor.execute("SELECT 1")
-
-
-@patch("database.sql_executor.DatabricksConnection")
-def test_table_exists(mock_connection):
-    mock_cursor = MagicMock()
-    mock_cursor.fetchall.return_value = [("hub_company",)]
-
-    mock_connection.return_value.get_connection.return_value.cursor.return_value.__enter__.return_value = mock_cursor
-
-    executor = SQLExecutor()
-
-    assert executor.table_exists("catalog", "silver", "hub_company") is True
-
-
-@patch("database.sql_executor.DatabricksConnection")
-def test_table_not_exists(mock_connection):
-    mock_cursor = MagicMock()
-    mock_cursor.fetchall.return_value = []
-
-    mock_connection.return_value.get_connection.return_value.cursor.return_value.__enter__.return_value = mock_cursor
-
-    executor = SQLExecutor()
-
-    assert executor.table_exists("catalog", "silver", "hub_company") is False
-
-
-@patch("database.sql_executor.DatabricksConnection")
-def test_close_connection(mock_connection):
-    mock_conn = MagicMock()
-
-    mock_connection.return_value.get_connection.return_value = mock_conn
-
-    executor = SQLExecutor()
-
-    executor.close()
-
-    mock_conn.close.assert_called_once()
+);
