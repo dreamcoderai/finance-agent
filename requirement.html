@@ -543,110 +543,27 @@ GOLD_SCHEMA = "dbs_xdata_gold"
 MODEL_SCHEMA = "dbs_xdata_model"
 CONTEXT_SCHEMA = "dbs_xdata_context"
 
-
-from pathlib import Path
-
-from common.logger import Logger
-from config.constants import (
-    CATALOG,
-    BRONZE_SCHEMA,
-    SILVER_SCHEMA
+from domains.contact.silver.hub.hub_enterprise_contact import (
+    HubEnterpriseContact,
 )
-from database.sql_executor import SQLExecutor
-
-logger = Logger.get_logger()
 
 
-class HubEnterpriseContact:
-    """
-    Hub Enterprise Contact Loader
-    """
+class SilverPipeline:
+
+    def run(self):
+
+        HubEnterpriseContact().load()
+
+
+
+        from domains.contact.silver.silver_pipeline import SilverPipeline
+
+
+class ContactPipeline:
 
     def __init__(self):
-        self.executor = SQLExecutor()
+        self.silver_pipeline = SilverPipeline()
 
-    def load(self):
-        """
-        Load Hub Enterprise Contact.
-        """
+    def run(self):
 
-        logger.info("Starting Hub Enterprise Contact load.")
-
-        query = self._load_sql()
-        query = self._prepare_query(query)
-
-        self.executor.execute(query)
-
-        logger.info("Hub Enterprise Contact loaded successfully.")
-
-    @staticmethod
-    def _load_sql() -> str:
-        """
-        Read SQL file.
-        """
-
-        sql_file = (
-            Path(__file__).parent
-            / "sql"
-            / "hub_enterprise_contact.sql"
-        )
-
-        with open(sql_file, "r", encoding="utf-8") as file:
-            return file.read()
-
-    @staticmethod
-    def _prepare_query(query: str) -> str:
-        """
-        Replace framework placeholders.
-        """
-
-        return (
-            query.replace("${CATALOG}", CATALOG)
-                 .replace("${BRONZE_SCHEMA}", BRONZE_SCHEMA)
-                 .replace("${SILVER_SCHEMA}", SILVER_SCHEMA)
-        )
-
-
-
-
-MERGE INTO ${CATALOG}.${SILVER_SCHEMA}.hub_enterprise_contact target
-
-USING
-(
-    SELECT DISTINCT
-
-        sha2(cast(enterprise_contact_id AS STRING), 256)
-            AS Hub_Enterprise_Contact_HK,
-
-        cast(enterprise_contact_id AS STRING)
-            AS Contact_ID,
-
-        current_timestamp()
-            AS Load_DTS,
-
-        'APM'
-            AS Record_Source
-
-    FROM ${CATALOG}.${BRONZE_SCHEMA}.view_enterprise_contact
-
-) source
-
-ON target.Hub_Enterprise_Contact_HK =
-   source.Hub_Enterprise_Contact_HK
-
-WHEN NOT MATCHED THEN
-INSERT
-(
-    Hub_Enterprise_Contact_HK,
-    Contact_ID,
-    Load_DTS,
-    Record_Source
-)
-
-VALUES
-(
-    source.Hub_Enterprise_Contact_HK,
-    source.Contact_ID,
-    source.Load_DTS,
-    source.Record_Source
-);
+        self.silver_pipeline.run()
