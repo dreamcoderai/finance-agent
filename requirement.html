@@ -543,27 +543,45 @@ GOLD_SCHEMA = "dbs_xdata_gold"
 MODEL_SCHEMA = "dbs_xdata_model"
 CONTEXT_SCHEMA = "dbs_xdata_context"
 
-from domains.contact.silver.hub.hub_enterprise_contact import (
-    HubEnterpriseContact,
-)
+
+import sys
+import threading
+import time
 
 
-class SilverPipeline:
+class Spinner:
+    def __init__(self, message="Executing"):
+        self.message = message
+        self.running = False
+        self.thread = None
 
-    def run(self):
+    def _spin(self):
+        symbols = ["|", "/", "-", "\\"]
+        i = 0
 
-        HubEnterpriseContact().load()
+        while self.running:
+            sys.stdout.write(
+                f"\r{self.message} {symbols[i % len(symbols)]}"
+            )
+            sys.stdout.flush()
 
+            i += 1
+            time.sleep(0.15)
 
+        # Clear spinner line
+        sys.stdout.write("\r" + " " * (len(self.message) + 10) + "\r")
+        sys.stdout.flush()
 
-        from domains.contact.silver.silver_pipeline import SilverPipeline
+    def start(self):
+        self.running = True
+        self.thread = threading.Thread(
+            target=self._spin,
+            daemon=True
+        )
+        self.thread.start()
 
+    def stop(self):
+        self.running = False
 
-class ContactPipeline:
-
-    def __init__(self):
-        self.silver_pipeline = SilverPipeline()
-
-    def run(self):
-
-        self.silver_pipeline.run()
+        if self.thread:
+            self.thread.join()
