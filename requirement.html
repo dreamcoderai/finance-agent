@@ -561,6 +561,12 @@ CONTEXT_SCHEMA = "dbs_xdata_context"
 -- Type   : DDL
 --------------------------------------------------
 
+--------------------------------------------------
+-- Object : Satellite Contracting Entity Contact
+-- Layer  : Silver
+-- Type   : DDL
+--------------------------------------------------
+
 CREATE TABLE IF NOT EXISTS
 ${CATALOG}.${SILVER_SCHEMA}.sat_contracting_entity_contact
 (
@@ -580,7 +586,6 @@ ${CATALOG}.${SILVER_SCHEMA}.sat_contracting_entity_contact
 )
 USING DELTA;
 
-
 --------------------------------------------------
 -- Object : Satellite Contracting Entity Contact
 -- Layer  : Silver
@@ -593,10 +598,8 @@ USING
 (
     SELECT DISTINCT
 
-        sha2(
-            cast(contracting_entity_id AS STRING),
-            256
-        ) AS Hub_Contracting_Entity_Contact_HK,
+        sha2(cast(contracting_entity_id AS STRING), 256)
+            AS Hub_Contracting_Entity_Contact_HK,
 
         sha2(
             concat_ws(
@@ -611,16 +614,16 @@ USING
             256
         ) AS Hash_Diff,
 
-        contracting_entity_name                         AS Contracting_Entity_Name,
-        cast(enterprise_contact_id AS STRING)           AS Enterprise_Contact_ID,
-        contact_name                                    AS Contact_Name,
-        rel_type_code                                   AS Rel_Type_Code,
-        rel_type_desc                                   AS Rel_Type_Desc,
-        is_active                                       AS Is_Active,
+        contracting_entity_name                 AS Contracting_Entity_Name,
+        cast(enterprise_contact_id AS STRING)   AS Enterprise_Contact_ID,
+        contact_name                            AS Contact_Name,
+        rel_type_code                           AS Rel_Type_Code,
+        rel_type_desc                           AS Rel_Type_Desc,
+        is_active                               AS Is_Active,
 
-        current_timestamp()                             AS Load_DTS,
+        current_timestamp()                     AS Load_DTS,
 
-        'APM'                                           AS Record_Source
+        'APM'                                   AS Record_Source
 
     FROM ${CATALOG}.${BRONZE_SCHEMA}.vew_contracting_entity_contact_relationships
 
