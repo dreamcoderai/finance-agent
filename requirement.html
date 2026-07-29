@@ -549,12 +549,78 @@ CONTEXT_SCHEMA = "dbs_xdata_context"
 -- Type   : DDL
 --------------------------------------------------
 
+--------------------------------------------------
+-- Object : Satellite Contracting Entity Contact
+-- Layer  : Silver
+-- Type   : DDL
+--------------------------------------------------
+
 CREATE TABLE IF NOT EXISTS
-${CATALOG}.${SILVER_SCHEMA}.hub_contracting_entity_contact
+${CATALOG}.${SILVER_SCHEMA}.sat_contracting_entity_contact
 (
     Hub_Contracting_Entity_Contact_HK STRING NOT NULL,
-    Contracting_Entity_ID             STRING NOT NULL,
-    Load_DTS                          TIMESTAMP NOT NULL,
-    Record_Source                     STRING NOT NULL
+
+    Contracting_Entity_Name STRING,
+    Enterprise_Contact_ID   STRING,
+    Contact_Name            STRING,
+    Rel_Type_Code           STRING,
+    Rel_Type_Desc           STRING,
+    Is_Active               STRING,
+
+    Load_DTS                TIMESTAMP NOT NULL,
+    Record_Source           STRING NOT NULL
 )
 USING DELTA;
+
+MERGE INTO ${CATALOG}.${SILVER_SCHEMA}.sat_contracting_entity_contact target
+
+USING
+(
+    SELECT DISTINCT
+
+        sha2(cast(contracting_entity_id AS STRING),256)
+            AS Hub_Contracting_Entity_Contact_HK,
+
+        contracting_entity_name,
+        cast(enterprise_contact_id AS STRING) AS Enterprise_Contact_ID,
+        contact_name,
+        rel_type_code,
+        rel_type_desc,
+        is_active,
+
+        current_timestamp() AS Load_DTS,
+
+        'APM' AS Record_Source
+
+    FROM ${CATALOG}.${BRONZE_SCHEMA}.vew_contracting_entity_contact_relationships
+
+) source
+
+ON target.Hub_Contracting_Entity_Contact_HK =
+   source.Hub_Contracting_Entity_Contact_HK
+
+WHEN NOT MATCHED THEN
+INSERT
+(
+    Hub_Contracting_Entity_Contact_HK,
+    Contracting_Entity_Name,
+    Enterprise_Contact_ID,
+    Contact_Name,
+    Rel_Type_Code,
+    Rel_Type_Desc,
+    Is_Active,
+    Load_DTS,
+    Record_Source
+)
+VALUES
+(
+    source.Hub_Contracting_Entity_Contact_HK,
+    source.Contracting_Entity_Name,
+    source.Enterprise_Contact_ID,
+    source.Contact_Name,
+    source.Rel_Type_Code,
+    source.Rel_Type_Desc,
+    source.Is_Active,
+    source.Load_DTS,
+    source.Record_Source
+);
