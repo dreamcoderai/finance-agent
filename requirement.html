@@ -544,49 +544,47 @@ MODEL_SCHEMA = "dbs_xdata_model"
 CONTEXT_SCHEMA = "dbs_xdata_context"
 
 
-from pathlib import Path
 
-from common.logger import Logger
-from config.constants import (
-    CATALOG,
-    BRONZE_SCHEMA,
-    SOURCE_CATALOG,
+MERGE INTO ${CATALOG}.${SILVER_SCHEMA}.hub_contracting_entity_contact target
+
+USING
+(
+    SELECT DISTINCT
+
+        sha2(cast(contracting_entity_id AS STRING),256)
+            AS Hub_Contracting_Entity_Contact_HK,
+
+        cast(contracting_entity_id AS STRING)
+            AS Contracting_Entity_ID,
+
+        current_timestamp()
+            AS Load_DTS,
+
+        'APM'
+            AS Record_Source
+
+    FROM ${CATALOG}.${BRONZE_SCHEMA}.vew_contracting_entity_contact_relationship
+
+) source
+
+ON target.Hub_Contracting_Entity_Contact_HK =
+   source.Hub_Contracting_Entity_Contact_HK
+
+WHEN NOT MATCHED THEN
+INSERT
+(
+    Hub_Contracting_Entity_Contact_HK,
+    Contracting_Entity_ID,
+    Load_DTS,
+    Record_Source
 )
-from database.sql_executor import SQLExecutor
+VALUES
+(
+    source.Hub_Contracting_Entity_Contact_HK,
+    source.Contracting_Entity_ID,
+    source.Load_DTS,
+    source.Record_Source
+);
 
-logger = Logger.get_logger()
 
 
-class ContractingEntityContactRelationship:
-
-    def __init__(self):
-        self.executor = SQLExecutor()
-
-    def create(self):
-        logger.info("Creating Contracting Entity Contact Relationship View.")
-
-        query = self._load_sql()
-        query = self._prepare_query(query)
-
-        self.executor.execute(query)
-
-        logger.info("Contracting Entity Contact Relationship View created successfully.")
-
-    @staticmethod
-    def _load_sql() -> str:
-        sql_file = (
-            Path(__file__).parent
-            / "sql"
-            / "vew_contracting_entity_contact_relationship.sql"
-        )
-
-        with open(sql_file, "r", encoding="utf-8") as file:
-            return file.read()
-
-    @staticmethod
-    def _prepare_query(query: str) -> str:
-        return (
-            query.replace("${CATALOG}", CATALOG)
-                 .replace("${BRONZE_SCHEMA}", BRONZE_SCHEMA)
-                 .replace("${SOURCE_CATALOG}", SOURCE_CATALOG)
-        )
