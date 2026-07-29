@@ -544,44 +544,49 @@ MODEL_SCHEMA = "dbs_xdata_model"
 CONTEXT_SCHEMA = "dbs_xdata_context"
 
 
-import sys
-import threading
-import time
+from pathlib import Path
+
+from common.logger import Logger
+from config.constants import (
+    CATALOG,
+    BRONZE_SCHEMA,
+    SOURCE_CATALOG,
+)
+from database.sql_executor import SQLExecutor
+
+logger = Logger.get_logger()
 
 
-class Spinner:
-    def __init__(self, message="Executing"):
-        self.message = message
-        self.running = False
-        self.thread = None
+class ContractingEntityContactRelationship:
 
-    def _spin(self):
-        symbols = ["|", "/", "-", "\\"]
-        i = 0
+    def __init__(self):
+        self.executor = SQLExecutor()
 
-        while self.running:
-            sys.stdout.write(
-                f"\r{self.message} {symbols[i % len(symbols)]}"
-            )
-            sys.stdout.flush()
+    def create(self):
+        logger.info("Creating Contracting Entity Contact Relationship View.")
 
-            i += 1
-            time.sleep(0.15)
+        query = self._load_sql()
+        query = self._prepare_query(query)
 
-        # Clear spinner line
-        sys.stdout.write("\r" + " " * (len(self.message) + 10) + "\r")
-        sys.stdout.flush()
+        self.executor.execute(query)
 
-    def start(self):
-        self.running = True
-        self.thread = threading.Thread(
-            target=self._spin,
-            daemon=True
+        logger.info("Contracting Entity Contact Relationship View created successfully.")
+
+    @staticmethod
+    def _load_sql() -> str:
+        sql_file = (
+            Path(__file__).parent
+            / "sql"
+            / "vew_contracting_entity_contact_relationship.sql"
         )
-        self.thread.start()
 
-    def stop(self):
-        self.running = False
+        with open(sql_file, "r", encoding="utf-8") as file:
+            return file.read()
 
-        if self.thread:
-            self.thread.join()
+    @staticmethod
+    def _prepare_query(query: str) -> str:
+        return (
+            query.replace("${CATALOG}", CATALOG)
+                 .replace("${BRONZE_SCHEMA}", BRONZE_SCHEMA)
+                 .replace("${SOURCE_CATALOG}", SOURCE_CATALOG)
+        )
