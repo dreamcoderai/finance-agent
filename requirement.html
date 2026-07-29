@@ -546,39 +546,30 @@ CONTEXT_SCHEMA = "dbs_xdata_context"
 
 
 --------------------------------------------------
--- Object : Link Contracting Entity Contact
--- Layer  : Silver
--- Type   : DDL
---------------------------------------------------
-
-CREATE TABLE IF NOT EXISTS
-${CATALOG}.${SILVER_SCHEMA}.link_contracting_entity_contact
-(
-    Link_Contracting_Entity_Contact_HK STRING NOT NULL,
-
-    Hub_Contracting_Entity_Contact_HK  STRING NOT NULL,
-    Hub_Enterprise_Contact_HK          STRING NOT NULL,
-
-    Load_DTS                           TIMESTAMP NOT NULL,
-    Record_Source                      STRING NOT NULL
-)
-USING DELTA;
-
-
-
---------------------------------------------------
--- Object : Link Contracting Entity Contact
+-- Object : Satellite Contracting Entity Contact Relationship
 -- Layer  : Silver
 -- Type   : DML
 --------------------------------------------------
 
 MERGE INTO
-${CATALOG}.${SILVER_SCHEMA}.link_contracting_entity_contact target
+${CATALOG}.${SILVER_SCHEMA}.Sat_Contracting_Entity_Contact_Relationship target
 
 USING
 (
     SELECT DISTINCT
 
+        -- Satellite Hash Key
+        sha2(
+            concat_ws(
+                '|',
+                cast(contracting_entity_id AS STRING),
+                cast(enterprise_contact_id AS STRING),
+                coalesce(rel_type_code,'')
+            ),
+            256
+        ) AS Sat_Contracting_Entity_Contact_Relationship_HK,
+
+        -- Link Hash Key
         sha2(
             concat_ws(
                 '|',
@@ -586,44 +577,69 @@ USING
                 cast(enterprise_contact_id AS STRING)
             ),
             256
-        ) AS Link_Contracting_Entity_Contact_HK,
+        ) AS Lnk_Contracting_Entity_Contact_HK,
 
+        -- Hash Diff
         sha2(
-            cast(contracting_entity_id AS STRING),
+            concat_ws(
+                '|',
+                coalesce(rel_type_code,''),
+                coalesce(rel_type_desc,''),
+                coalesce(is_active,'')
+            ),
             256
-        ) AS Hub_Contracting_Entity_Contact_HK,
+        ) AS Hash_Diff,
 
-        sha2(
-            cast(enterprise_contact_id AS STRING),
-            256
-        ) AS Hub_Enterprise_Contact_HK,
+        rel_type_desc AS Contracting_Entity_Contact_Role,
+
+        current_timestamp() AS Effective_Start_Date,
+
+        CAST('9999-12-31 23:59:59' AS TIMESTAMP) AS Effective_End_Date,
+
+        'Y' AS Is_Current_Flag,
+
+        'N' AS Deleted_Flag,
 
         current_timestamp() AS Load_DTS,
 
         'APM' AS Record_Source
 
-    FROM ${CATALOG}.${BRONZE_SCHEMA}.vew_contracting_entity_contact_relationships
+    FROM
+    ${CATALOG}.${BRONZE_SCHEMA}.vew_contracting_entity_contact_relationships
 
 ) source
 
 ON
-target.Link_Contracting_Entity_Contact_HK =
-source.Link_Contracting_Entity_Contact_HK
+target.Lnk_Contracting_Entity_Contact_HK = source.Lnk_Contracting_Entity_Contact_HK
+AND
+target.Hash_Diff = source.Hash_Diff
+AND
+target.Is_Current_Flag = 'Y'
 
 WHEN NOT MATCHED THEN
 INSERT
 (
-    Link_Contracting_Entity_Contact_HK,
-    Hub_Contracting_Entity_Contact_HK,
-    Hub_Enterprise_Contact_HK,
+    Sat_Contracting_Entity_Contact_Relationship_HK,
+    Lnk_Contracting_Entity_Contact_HK,
+    Hash_Diff,
+    Contracting_Entity_Contact_Role,
+    Effective_Start_Date,
+    Effective_End_Date,
+    Is_Current_Flag,
+    Deleted_Flag,
     Load_DTS,
     Record_Source
 )
 VALUES
 (
-    source.Link_Contracting_Entity_Contact_HK,
-    source.Hub_Contracting_Entity_Contact_HK,
-    source.Hub_Enterprise_Contact_HK,
+    source.Sat_Contracting_Entity_Contact_Relationship_HK,
+    source.Lnk_Contracting_Entity_Contact_HK,
+    source.Hash_Diff,
+    source.Contracting_Entity_Contact_Role,
+    source.Effective_Start_Date,
+    source.Effective_End_Date,
+    source.Is_Current_Flag,
+    source.Deleted_Flag,
     source.Load_DTS,
     source.Record_Source
 );
