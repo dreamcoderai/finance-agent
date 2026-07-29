@@ -543,48 +543,18 @@ GOLD_SCHEMA = "dbs_xdata_gold"
 MODEL_SCHEMA = "dbs_xdata_model"
 CONTEXT_SCHEMA = "dbs_xdata_context"
 
+--------------------------------------------------
+-- Object : Hub Contracting Entity Contact
+-- Layer  : Silver
+-- Type   : DDL
+--------------------------------------------------
 
-
-MERGE INTO ${CATALOG}.${SILVER_SCHEMA}.hub_contracting_entity_contact target
-
-USING
+CREATE TABLE IF NOT EXISTS
+${CATALOG}.${SILVER_SCHEMA}.hub_contracting_entity_contact
 (
-    SELECT DISTINCT
-
-        sha2(cast(contracting_entity_id AS STRING),256)
-            AS Hub_Contracting_Entity_Contact_HK,
-
-        cast(contracting_entity_id AS STRING)
-            AS Contracting_Entity_ID,
-
-        current_timestamp()
-            AS Load_DTS,
-
-        'APM'
-            AS Record_Source
-
-    FROM ${CATALOG}.${BRONZE_SCHEMA}.vew_contracting_entity_contact_relationship
-
-) source
-
-ON target.Hub_Contracting_Entity_Contact_HK =
-   source.Hub_Contracting_Entity_Contact_HK
-
-WHEN NOT MATCHED THEN
-INSERT
-(
-    Hub_Contracting_Entity_Contact_HK,
-    Contracting_Entity_ID,
-    Load_DTS,
-    Record_Source
+    Hub_Contracting_Entity_Contact_HK STRING NOT NULL,
+    Contracting_Entity_ID             STRING NOT NULL,
+    Load_DTS                          TIMESTAMP NOT NULL,
+    Record_Source                     STRING NOT NULL
 )
-VALUES
-(
-    source.Hub_Contracting_Entity_Contact_HK,
-    source.Contracting_Entity_ID,
-    source.Load_DTS,
-    source.Record_Source
-);
-
-
-
+USING DELTA;
