@@ -543,95 +543,92 @@ GOLD_SCHEMA = "dbs_xdata_gold"
 MODEL_SCHEMA = "dbs_xdata_model"
 CONTEXT_SCHEMA = "dbs_xdata_context"
 
+from pathlib import Path
 
---------------------------------------------------
--- Object : VCU Contracting Entity Contact
--- Layer  : Gold
--- Type   : VIEW
---------------------------------------------------
-
-CREATE OR REPLACE VIEW
-${CATALOG}.${GOLD_SCHEMA}.vcu_contracting_entity_contact
-AS
-
-SELECT
-
-    hc.Contracting_Entity_ID,
-
-    hec.Contact_ID,
-
-    sat.Contracting_Entity_Contact_Role,
-
-    sat.Effective_Start_Date,
-    sat.Effective_End_Date,
-
-    sat.Is_Current_Flag,
-    sat.Deleted_Flag,
-
-    sat.Load_DTS,
-    sat.Record_Source
-
-FROM ${CATALOG}.${SILVER_SCHEMA}.link_contracting_entity_contact lnk
-
-INNER JOIN ${CATALOG}.${SILVER_SCHEMA}.hub_contracting_entity hc
-ON hc.Hub_Contracting_Entity_HK = lnk.Hub_Contracting_Entity_HK
-
-INNER JOIN ${CATALOG}.${SILVER_SCHEMA}.hub_enterprise_contact hec
-ON hec.Hub_Enterprise_Contact_HK = lnk.Hub_Enterprise_Contact_HK
-
-INNER JOIN ${CATALOG}.${SILVER_SCHEMA}.sat_contracting_entity_contact_relationship sat
-ON sat.Lnk_Contracting_Entity_Contact_HK = lnk.Link_Contracting_Entity_Contact_HK
-
-WHERE
-sat.Is_Current_Flag = 'Y'
-AND sat.Deleted_Flag = 'N';
+from common.logger import logger
+from config.settings import CATALOG, GOLD_SCHEMA, SILVER_SCHEMA
+from database.sql_executor import SQLExecutor
 
 
+class VCUContractingEntityContact:
 
---------------------------------------------------
--- Object : VED Contracting Entity Contact
--- Layer  : Gold
--- Type   : VIEW
---------------------------------------------------
+    def __init__(self):
+        self.sql_executor = SQLExecutor()
 
-CREATE OR REPLACE VIEW
-${CATALOG}.${GOLD_SCHEMA}.ved_contracting_entity_contact
-AS
+    def load(self):
 
-SELECT
+        logger.info("Starting VCU Contracting Entity Contact load.")
 
-    hc.Hub_Contracting_Entity_HK,
+        sql = self._load_sql()
+        sql = self._prepare_sql(sql)
 
-    hec.Hub_Enterprise_Contact_HK,
+        self.sql_executor.execute(sql)
 
-    lnk.Link_Contracting_Entity_Contact_HK,
+        logger.info("VCU Contracting Entity Contact loaded successfully.")
 
-    sat.Sat_Contracting_Entity_Contact_Relationship_HK,
+    def _load_sql(self):
 
-    sat.Hash_Diff,
+        sql_path = (
+            Path(__file__).parent
+            / "sql"
+            / "vcu_contracting_entity_contact.sql"
+        )
 
-    hc.Contracting_Entity_ID,
+        with open(sql_path, "r") as f:
+            return f.read()
 
-    hec.Contact_ID,
+    def _prepare_sql(self, sql):
 
-    sat.Contracting_Entity_Contact_Role,
+        return (
+            sql.replace("${CATALOG}", CATALOG)
+               .replace("${SILVER_SCHEMA}", SILVER_SCHEMA)
+               .replace("${GOLD_SCHEMA}", GOLD_SCHEMA)
+        )
 
-    sat.Effective_Start_Date,
-    sat.Effective_End_Date,
 
-    sat.Is_Current_Flag,
-    sat.Deleted_Flag,
 
-    sat.Load_DTS,
-    sat.Record_Source
 
-FROM ${CATALOG}.${SILVER_SCHEMA}.link_contracting_entity_contact lnk
 
-INNER JOIN ${CATALOG}.${SILVER_SCHEMA}.hub_contracting_entity hc
-ON hc.Hub_Contracting_Entity_HK = lnk.Hub_Contracting_Entity_HK
 
-INNER JOIN ${CATALOG}.${SILVER_SCHEMA}.hub_enterprise_contact hec
-ON hec.Hub_Enterprise_Contact_HK = lnk.Hub_Enterprise_Contact_HK
 
-INNER JOIN ${CATALOG}.${SILVER_SCHEMA}.sat_contracting_entity_contact_relationship sat
-ON sat.Lnk_Contracting_Entity_Contact_HK = lnk.Link_Contracting_Entity_Contact_HK;
+        from pathlib import Path
+
+from common.logger import logger
+from config.settings import CATALOG, GOLD_SCHEMA, SILVER_SCHEMA
+from database.sql_executor import SQLExecutor
+
+
+class VEDContractingEntityContact:
+
+    def __init__(self):
+        self.sql_executor = SQLExecutor()
+
+    def load(self):
+
+        logger.info("Starting VED Contracting Entity Contact load.")
+
+        sql = self._load_sql()
+        sql = self._prepare_sql(sql)
+
+        self.sql_executor.execute(sql)
+
+        logger.info("VED Contracting Entity Contact loaded successfully.")
+
+    def _load_sql(self):
+
+        sql_path = (
+            Path(__file__).parent
+            / "sql"
+            / "ved_contracting_entity_contact.sql"
+        )
+
+        with open(sql_path, "r") as f:
+            return f.read()
+
+    def _prepare_sql(self, sql):
+
+        return (
+            sql.replace("${CATALOG}", CATALOG)
+               .replace("${SILVER_SCHEMA}", SILVER_SCHEMA)
+               .replace("${GOLD_SCHEMA}", GOLD_SCHEMA)
+        )
