@@ -544,102 +544,94 @@ MODEL_SCHEMA = "dbs_xdata_model"
 CONTEXT_SCHEMA = "dbs_xdata_context"
 
 
+--------------------------------------------------
+-- Object : VCU Contracting Entity Contact
+-- Layer  : Gold
+-- Type   : VIEW
+--------------------------------------------------
+
+CREATE OR REPLACE VIEW
+${CATALOG}.${GOLD_SCHEMA}.vcu_contracting_entity_contact
+AS
+
+SELECT
+
+    hc.Contracting_Entity_ID,
+
+    hec.Contact_ID,
+
+    sat.Contracting_Entity_Contact_Role,
+
+    sat.Effective_Start_Date,
+    sat.Effective_End_Date,
+
+    sat.Is_Current_Flag,
+    sat.Deleted_Flag,
+
+    sat.Load_DTS,
+    sat.Record_Source
+
+FROM ${CATALOG}.${SILVER_SCHEMA}.link_contracting_entity_contact lnk
+
+INNER JOIN ${CATALOG}.${SILVER_SCHEMA}.hub_contracting_entity hc
+ON hc.Hub_Contracting_Entity_HK = lnk.Hub_Contracting_Entity_HK
+
+INNER JOIN ${CATALOG}.${SILVER_SCHEMA}.hub_enterprise_contact hec
+ON hec.Hub_Enterprise_Contact_HK = lnk.Hub_Enterprise_Contact_HK
+
+INNER JOIN ${CATALOG}.${SILVER_SCHEMA}.sat_contracting_entity_contact_relationship sat
+ON sat.Lnk_Contracting_Entity_Contact_HK = lnk.Link_Contracting_Entity_Contact_HK
+
+WHERE
+sat.Is_Current_Flag = 'Y'
+AND sat.Deleted_Flag = 'N';
+
+
 
 --------------------------------------------------
--- Object : Satellite Contracting Entity Contact Relationship
--- Layer  : Silver
--- Type   : DML
+-- Object : VED Contracting Entity Contact
+-- Layer  : Gold
+-- Type   : VIEW
 --------------------------------------------------
 
-MERGE INTO
-${CATALOG}.${SILVER_SCHEMA}.Sat_Contracting_Entity_Contact_Relationship target
+CREATE OR REPLACE VIEW
+${CATALOG}.${GOLD_SCHEMA}.ved_contracting_entity_contact
+AS
 
-USING
-(
-    SELECT DISTINCT
+SELECT
 
-        -- Satellite Hash Key
-        sha2(
-            concat_ws(
-                '|',
-                cast(contracting_entity_id AS STRING),
-                cast(enterprise_contact_id AS STRING),
-                coalesce(rel_type_code,'')
-            ),
-            256
-        ) AS Sat_Contracting_Entity_Contact_Relationship_HK,
+    hc.Hub_Contracting_Entity_HK,
 
-        -- Link Hash Key
-        sha2(
-            concat_ws(
-                '|',
-                cast(contracting_entity_id AS STRING),
-                cast(enterprise_contact_id AS STRING)
-            ),
-            256
-        ) AS Lnk_Contracting_Entity_Contact_HK,
+    hec.Hub_Enterprise_Contact_HK,
 
-        -- Hash Diff
-        sha2(
-            concat_ws(
-                '|',
-                coalesce(rel_type_code,''),
-                coalesce(rel_type_desc,''),
-                coalesce(is_active,'')
-            ),
-            256
-        ) AS Hash_Diff,
+    lnk.Link_Contracting_Entity_Contact_HK,
 
-        rel_type_desc AS Contracting_Entity_Contact_Role,
+    sat.Sat_Contracting_Entity_Contact_Relationship_HK,
 
-        current_timestamp() AS Effective_Start_Date,
+    sat.Hash_Diff,
 
-        CAST('9999-12-31 23:59:59' AS TIMESTAMP) AS Effective_End_Date,
+    hc.Contracting_Entity_ID,
 
-        'Y' AS Is_Current_Flag,
+    hec.Contact_ID,
 
-        'N' AS Deleted_Flag,
+    sat.Contracting_Entity_Contact_Role,
 
-        current_timestamp() AS Load_DTS,
+    sat.Effective_Start_Date,
+    sat.Effective_End_Date,
 
-        'APM' AS Record_Source
+    sat.Is_Current_Flag,
+    sat.Deleted_Flag,
 
-    FROM
-    ${CATALOG}.${BRONZE_SCHEMA}.vew_contracting_entity_contact_relationships
+    sat.Load_DTS,
+    sat.Record_Source
 
-) source
+FROM ${CATALOG}.${SILVER_SCHEMA}.link_contracting_entity_contact lnk
 
-ON
-target.Lnk_Contracting_Entity_Contact_HK = source.Lnk_Contracting_Entity_Contact_HK
-AND
-target.Hash_Diff = source.Hash_Diff
-AND
-target.Is_Current_Flag = 'Y'
+INNER JOIN ${CATALOG}.${SILVER_SCHEMA}.hub_contracting_entity hc
+ON hc.Hub_Contracting_Entity_HK = lnk.Hub_Contracting_Entity_HK
 
-WHEN NOT MATCHED THEN
-INSERT
-(
-    Sat_Contracting_Entity_Contact_Relationship_HK,
-    Lnk_Contracting_Entity_Contact_HK,
-    Hash_Diff,
-    Contracting_Entity_Contact_Role,
-    Effective_Start_Date,
-    Effective_End_Date,
-    Is_Current_Flag,
-    Deleted_Flag,
-    Load_DTS,
-    Record_Source
-)
-VALUES
-(
-    source.Sat_Contracting_Entity_Contact_Relationship_HK,
-    source.Lnk_Contracting_Entity_Contact_HK,
-    source.Hash_Diff,
-    source.Contracting_Entity_Contact_Role,
-    source.Effective_Start_Date,
-    source.Effective_End_Date,
-    source.Is_Current_Flag,
-    source.Deleted_Flag,
-    source.Load_DTS,
-    source.Record_Source
-);
+INNER JOIN ${CATALOG}.${SILVER_SCHEMA}.hub_enterprise_contact hec
+ON hec.Hub_Enterprise_Contact_HK = lnk.Hub_Enterprise_Contact_HK
+
+INNER JOIN ${CATALOG}.${SILVER_SCHEMA}.sat_contracting_entity_contact_relationship sat
+ON sat.Lnk_Contracting_Entity_Contact_HK = lnk.Link_Contracting_Entity_Contact_HK;
