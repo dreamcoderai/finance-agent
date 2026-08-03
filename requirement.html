@@ -659,3 +659,72 @@ Strawberry handles GraphQL queries.
 Service Layer enforces business rules.
 Repository Layer retrieves data from Databricks (primarily Gold views, and Silver when appropriate).
 SQLExecutor remains the single component responsible for executing SQL.
+
+
+xdata_api/
+│
+├── app.py
+├── requirements.txt
+├── .env
+├── README.md
+│
+├── core/
+│   ├── config.py
+│   ├── logger.py
+│   ├── middleware.py
+│   ├── security.py
+│   ├── exceptions.py
+│   ├── dependencies.py
+│   ├── responses.py
+│   └── openapi.py              # Swagger/OpenAPI customization
+│
+├── domains/
+│   │
+│   └── contact/
+│       │
+│       ├── company_contact/
+│       │   ├── api.py
+│       │   ├── graphql.py
+│       │   ├── service.py
+│       │   ├── repository.py
+│       │   ├── models.py
+│       │   └── constants.py
+│       │
+│       ├── ce_contact/
+│       │   ├── api.py
+│       │   ├── graphql.py
+│       │   ├── service.py
+│       │   ├── repository.py
+│       │   ├── models.py
+│       │   └── constants.py
+│       │
+│       └── external_contact/
+│           ├── api.py
+│           ├── graphql.py
+│           ├── service.py
+│           ├── repository.py
+│           ├── models.py
+│           └── constants.py
+│
+├── providers/
+│   ├── base_provider.py
+│   └── databricks/
+│       ├── connection.py
+│       ├── sql_executor.py
+│       └── databricks_provider.py
+│
+├── infrastructure/
+│   ├── auth/
+│   ├── cache/
+│   ├── events/
+│   └── monitoring/
+│
+├── shared/
+│   ├── constants.py
+│   ├── pagination.py
+│   ├── filters.py
+│   └── utilities.py
+│
+├── tests/
+│
+└── docs/
