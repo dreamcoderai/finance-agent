@@ -660,97 +660,71 @@ Service Layer enforces business rules.
 Repository Layer retrieves data from Databricks (primarily Gold views, and Silver when appropriate).
 SQLExecutor remains the single component responsible for executing SQL.
 
+
 xdata_api/
 │
-├── .venv/                         # Local Python virtual environment
-│                                  # Never commit to Git
+├── .venv/                                        # Python Virtual Environment
+├── .env                                          # Environment Variables
+├── .env.example                                  # Sample Environment Variables
+├── .gitignore                                    # Git Ignore Rules
+├── README.md                                     # Project Documentation
+├── requirements.txt                              # Python Dependencies
 │
-├── .env                           # Local environment variables
-│                                  # Contains secrets, DB credentials, JWT keys
-│
-├── .env.example                   # Template for new developers
-│                                  # No secrets
-│
-├── .gitignore                     # Files/folders excluded from Git
-│
-├── requirements.txt               # Python dependencies
-│
-├── README.md                      # Project setup, architecture and usage
-│
-├── app.py                         # Application entry point
-│                                  # Creates FastAPI app
-│                                  # Registers routers
-│                                  # Registers middleware
-│                                  # Initializes Swagger
-│                                  # Starts application
+├── app.py                                        # FastAPI Bootstrap
+│                                                 # Registers Middleware
+│                                                 # Registers Swagger
+│                                                 # Registers REST
+│                                                 # Registers Strawberry GraphQL
+│                                                 # Starts Application
 │
 ├── core/
 │   │
-│   ├── config.py                  # Reads configuration from .env
-│   │                              # Pydantic Settings
-│   │
-│   ├── logger.py                  # Central logging configuration
-│   │                              # Console/File logging
-│   │
-│   ├── middleware.py              # Global middleware
-│   │                              # Request logging
-│   │                              # Correlation IDs
-│   │                              # Performance timing
-│   │
-│   ├── exceptions.py              # Global exception handlers
-│   │                              # Converts exceptions into JSON responses
-│   │
-│   ├── dependencies.py            # FastAPI dependency injection
-│   │                              # JWT validation
-│   │                              # Current user
-│   │                              # DB provider injection
-│   │
-│   ├── security.py                # Shared security helpers
-│   │                              # Password hashing
-│   │                              # JWT utilities
-│   │
-│   ├── responses.py               # Standard response models
-│   │                              # SuccessResponse
-│   │                              # ErrorResponse
-│   │
-│   └── openapi.py                 # Swagger/OpenAPI customization
-│                                  # Title
-│                                  # Version
-│                                  # JWT Authorize button
-│                                  # Tags
-│                                  # Contact information
+│   ├── config.py                                 # Load application configuration
+│   ├── middleware.py                             # CORS, Request Logging, Correlation ID
+│   ├── dependencies.py                           # Dependency Injection
+│   ├── security.py                               # Security helper functions
+│   ├── responses.py                              # Standard Success/Error Response Models
+│   └── openapi.py                                # Swagger/OpenAPI configuration
 │
 ├── interfaces/
 │   │
-│   ├── service.py                 # Base interface for all Services
+│   ├── service.py                                # Base Service Interface
+│   ├── repository.py                             # Base Repository Interface
+│   ├── provider.py                               # Base Provider Interface
+│   ├── cache.py                                  # Base Cache Interface
+│   └── event_bus.py                              # Base Event Bus Interface
+│
+├── presentation/
 │   │
-│   ├── repository.py              # Base interface for Repositories
+│   ├── swagger/
+│   │   └── openapi.py                            # Swagger UI customization
 │   │
-│   └── provider.py                # Base interface for Providers
+│   ├── rest/
+│   │   ├── router.py                             # Master REST Router
+│   │   └── health.py                             # Health API
+│   │
+│   └── graphql/
+│       ├── router.py                             # Strawberry Router
+│       ├── schema.py                             # Root Schema
+│       ├── queries.py                            # Root Queries
+│       ├── mutations.py                          # Root Mutations
+│       ├── types.py                              # Shared GraphQL Types
+│       ├── context.py                            # GraphQL Context
+│       └── dataloaders.py                        # N+1 Query Prevention
 │
 ├── domains/
 │   │
 │   └── contact/
 │       │
-│       ├── router.py              # Aggregates all Contact routes
+│       ├── router.py                             # Register Contact APIs
 │       │
 │       ├── company_contact/
-│       │   │
-│       │   ├── api.py             # REST endpoints
-│       │   │                      # GET /company-contact
-│       │   │
-│       │   ├── graphql.py         # GraphQL resolver
-│       │   │
-│       │   ├── service.py         # Business logic
-│       │   │
-│       │   ├── repository.py      # Data access
-│       │   │
-│       │   ├── models.py          # Request/Response DTOs
-│       │   │
-│       │   └── constants.py       # View names
-│       │                          # VCU
-│       │                          # VED
-│       │                          # SAT
+│       │   ├── api.py                            # REST Controller
+│       │   ├── graphql.py                        # Strawberry Resolver
+│       │   ├── service.py                        # Business Logic
+│       │   ├── repository.py                     # Reads Gold Views
+│       │   ├── models.py                         # DTOs
+│       │   └── constants.py                      # View/Table Constants
 │       │
 │       ├── ce_contact/
 │       │   ├── api.py
@@ -768,89 +742,76 @@ xdata_api/
 │           ├── models.py
 │           └── constants.py
 │
-├── graphql/
+├── data_sources/
 │   │
-│   ├── schema.py                  # Root GraphQL schema
-│   │                              # Combines all domains
-│   │
-│   ├── router.py                  # GraphQL Router
-│   │                              # Mounted at /graphql
-│   │
-│   └── dataloaders.py             # Batch loading
-│                                  # Prevents N+1 query problem
-│
-├── providers/
-│   │
-│   ├── base_provider.py           # Generic provider interface
-│   │                              # execute()
-│   │                              # fetch_one()
-│   │                              # fetch_all()
+│   ├── base_provider.py                          # Generic Data Source Contract
 │   │
 │   └── databricks/
-│       │
-│       ├── connection.py          # Creates Databricks connection
-│       │
-│       ├── sql_executor.py        # Executes SQL
-│       │
-│       └── databricks_provider.py # Databricks implementation
-│                                  # Uses SQL Executor
+│       ├── connection.py                         # Databricks SQL Connection
+│       ├── query_executor.py                     # Execute SQL
+│       ├── query_builder.py                      # Build Dynamic SQL
+│       ├── databricks_provider.py                # Databricks Provider
+│       └── exceptions.py                         # Databricks Exceptions
 │
 ├── infrastructure/
 │   │
 │   ├── auth/
-│   │   │
-│   │   ├── jwt_manager.py         # Create & validate JWT
-│   │   │
-│   │   ├── auth_service.py        # Authentication logic
-│   │   │
-│   │   ├── permissions.py         # RBAC permissions
-│   │   │
-│   │   └── roles.py               # User roles
+│   │   ├── jwt_manager.py                        # JWT Generation & Validation
+│   │   ├── auth_service.py                       # Authentication
+│   │   ├── authorization.py                      # RBAC Authorization
+│   │   ├── permissions.py                        # Permission Definitions
+│   │   └── roles.py                              # System Roles
 │   │
 │   ├── cache/
-│   │   │
-│   │   ├── redis_manager.py       # Redis connection
-│   │   │
-│   │   └── cache_service.py       # Cache abstraction
+│   │   ├── redis_manager.py                      # Redis Connection
+│   │   └── cache_service.py                      # Cache Operations
 │   │
 │   ├── events/
-│   │   │
-│   │   ├── kafka_producer.py      # Publish events
-│   │   │
-│   │   ├── kafka_consumer.py      # Consume events
-│   │   │
-│   │   └── event_bus.py           # Event abstraction
+│   │   ├── kafka_producer.py                     # Publish Events
+│   │   ├── kafka_consumer.py                     # Consume Events
+│   │   ├── event_bus.py                          # Event Abstraction
+│   │   └── event_models.py                       # Event DTOs
+│   │
+│   ├── logging/
+│   │   ├── logger.py                             # Logging Configuration
+│   │   ├── request_logger.py                     # Request Logging
+│   │   ├── error_logger.py                       # Exception Logging
+│   │   ├── audit_logger.py                       # Business Audit Logging
+│   │   └── log_formatter.py                      # JSON/Text Formatter
+│   │
+│   ├── exceptions/
+│   │   ├── base_exception.py                     # Base Application Exception
+│   │   ├── business_exception.py                 # Business Exceptions
+│   │   ├── validation_exception.py               # Validation Exceptions
+│   │   ├── repository_exception.py               # Repository Exceptions
+│   │   ├── authentication_exception.py           # Authentication Errors
+│   │   ├── authorization_exception.py            # Authorization Errors
+│   │   ├── databricks_exception.py               # Databricks Errors
+│   │   └── exception_handler.py                  # Global Exception Handler
 │   │
 │   └── monitoring/
-│       │
-│       ├── health.py              # Health checks
-│       │
-│       └── metrics.py             # Prometheus/custom metrics
+│       ├── metrics.py                            # Application Metrics
+│       ├── tracing.py                            # Distributed Tracing
+│       └── health_monitor.py                     # Internal Health Monitoring
 │
 ├── shared/
 │   │
-│   ├── constants.py               # Global constants
-│   │
-│   ├── utilities.py               # Helper methods
-│   │
-│   ├── pagination.py              # Pagination helpers
-│   │
-│   └── filters.py                 # Generic filtering utilities
+│   ├── constants.py                              # Global Constants
+│   ├── enums.py                                  # Shared Enums
+│   ├── utilities.py                              # Utility Functions
+│   ├── validators.py                             # Common Validators
+│   ├── pagination.py                             # Pagination Helper
+│   └── filters.py                                # Generic Filtering
 │
 ├── tests/
-│   │
-│   ├── unit/                      # Unit tests
-│   │
-│   ├── integration/               # Integration tests
-│   │
-│   └── performance/               # Load/performance tests
+│   ├── unit/                                     # Unit Tests
+│   ├── integration/                              # Integration Tests
+│   └── performance/                              # Performance Tests
 │
 └── docs/
-    │
-    ├── architecture.md            # System architecture
-    │
-    ├── api.md                     # API documentation
-    │
-    ├── graphql.md                 # GraphQL examples
-    │
-    └── deployment.md              # Deployment guide
+    ├── architecture.md                           # Architecture Guide
+    ├── api.md                                    # REST API Guide
+    ├── graphql.md                                # Strawberry Guide
+    ├── security.md                               # JWT/RBAC Guide
+    ├── deployment.md                             # Deployment Guide
+    └── databricks.md                             # Databricks Integration
