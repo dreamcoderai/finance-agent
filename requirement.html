@@ -660,35 +660,97 @@ Service Layer enforces business rules.
 Repository Layer retrieves data from Databricks (primarily Gold views, and Silver when appropriate).
 SQLExecutor remains the single component responsible for executing SQL.
 
-
 xdata_api/
 │
-├── app.py
-├── requirements.txt
-├── .env
-├── README.md
+├── .venv/                         # Local Python virtual environment
+│                                  # Never commit to Git
+│
+├── .env                           # Local environment variables
+│                                  # Contains secrets, DB credentials, JWT keys
+│
+├── .env.example                   # Template for new developers
+│                                  # No secrets
+│
+├── .gitignore                     # Files/folders excluded from Git
+│
+├── requirements.txt               # Python dependencies
+│
+├── README.md                      # Project setup, architecture and usage
+│
+├── app.py                         # Application entry point
+│                                  # Creates FastAPI app
+│                                  # Registers routers
+│                                  # Registers middleware
+│                                  # Initializes Swagger
+│                                  # Starts application
 │
 ├── core/
-│   ├── config.py
-│   ├── logger.py
-│   ├── middleware.py
-│   ├── security.py
-│   ├── exceptions.py
-│   ├── dependencies.py
-│   ├── responses.py
-│   └── openapi.py              # Swagger/OpenAPI customization
+│   │
+│   ├── config.py                  # Reads configuration from .env
+│   │                              # Pydantic Settings
+│   │
+│   ├── logger.py                  # Central logging configuration
+│   │                              # Console/File logging
+│   │
+│   ├── middleware.py              # Global middleware
+│   │                              # Request logging
+│   │                              # Correlation IDs
+│   │                              # Performance timing
+│   │
+│   ├── exceptions.py              # Global exception handlers
+│   │                              # Converts exceptions into JSON responses
+│   │
+│   ├── dependencies.py            # FastAPI dependency injection
+│   │                              # JWT validation
+│   │                              # Current user
+│   │                              # DB provider injection
+│   │
+│   ├── security.py                # Shared security helpers
+│   │                              # Password hashing
+│   │                              # JWT utilities
+│   │
+│   ├── responses.py               # Standard response models
+│   │                              # SuccessResponse
+│   │                              # ErrorResponse
+│   │
+│   └── openapi.py                 # Swagger/OpenAPI customization
+│                                  # Title
+│                                  # Version
+│                                  # JWT Authorize button
+│                                  # Tags
+│                                  # Contact information
+│
+├── interfaces/
+│   │
+│   ├── service.py                 # Base interface for all Services
+│   │
+│   ├── repository.py              # Base interface for Repositories
+│   │
+│   └── provider.py                # Base interface for Providers
 │
 ├── domains/
 │   │
 │   └── contact/
 │       │
+│       ├── router.py              # Aggregates all Contact routes
+│       │
 │       ├── company_contact/
-│       │   ├── api.py
-│       │   ├── graphql.py
-│       │   ├── service.py
-│       │   ├── repository.py
-│       │   ├── models.py
-│       │   └── constants.py
+│       │   │
+│       │   ├── api.py             # REST endpoints
+│       │   │                      # GET /company-contact
+│       │   │
+│       │   ├── graphql.py         # GraphQL resolver
+│       │   │
+│       │   ├── service.py         # Business logic
+│       │   │
+│       │   ├── repository.py      # Data access
+│       │   │
+│       │   ├── models.py          # Request/Response DTOs
+│       │   │
+│       │   └── constants.py       # View names
+│       │                          # VCU
+│       │                          # VED
+│       │                          # SAT
 │       │
 │       ├── ce_contact/
 │       │   ├── api.py
@@ -706,25 +768,89 @@ xdata_api/
 │           ├── models.py
 │           └── constants.py
 │
+├── graphql/
+│   │
+│   ├── schema.py                  # Root GraphQL schema
+│   │                              # Combines all domains
+│   │
+│   ├── router.py                  # GraphQL Router
+│   │                              # Mounted at /graphql
+│   │
+│   └── dataloaders.py             # Batch loading
+│                                  # Prevents N+1 query problem
+│
 ├── providers/
-│   ├── base_provider.py
+│   │
+│   ├── base_provider.py           # Generic provider interface
+│   │                              # execute()
+│   │                              # fetch_one()
+│   │                              # fetch_all()
+│   │
 │   └── databricks/
-│       ├── connection.py
-│       ├── sql_executor.py
-│       └── databricks_provider.py
+│       │
+│       ├── connection.py          # Creates Databricks connection
+│       │
+│       ├── sql_executor.py        # Executes SQL
+│       │
+│       └── databricks_provider.py # Databricks implementation
+│                                  # Uses SQL Executor
 │
 ├── infrastructure/
+│   │
 │   ├── auth/
+│   │   │
+│   │   ├── jwt_manager.py         # Create & validate JWT
+│   │   │
+│   │   ├── auth_service.py        # Authentication logic
+│   │   │
+│   │   ├── permissions.py         # RBAC permissions
+│   │   │
+│   │   └── roles.py               # User roles
+│   │
 │   ├── cache/
+│   │   │
+│   │   ├── redis_manager.py       # Redis connection
+│   │   │
+│   │   └── cache_service.py       # Cache abstraction
+│   │
 │   ├── events/
+│   │   │
+│   │   ├── kafka_producer.py      # Publish events
+│   │   │
+│   │   ├── kafka_consumer.py      # Consume events
+│   │   │
+│   │   └── event_bus.py           # Event abstraction
+│   │
 │   └── monitoring/
+│       │
+│       ├── health.py              # Health checks
+│       │
+│       └── metrics.py             # Prometheus/custom metrics
 │
 ├── shared/
-│   ├── constants.py
-│   ├── pagination.py
-│   ├── filters.py
-│   └── utilities.py
+│   │
+│   ├── constants.py               # Global constants
+│   │
+│   ├── utilities.py               # Helper methods
+│   │
+│   ├── pagination.py              # Pagination helpers
+│   │
+│   └── filters.py                 # Generic filtering utilities
 │
 ├── tests/
+│   │
+│   ├── unit/                      # Unit tests
+│   │
+│   ├── integration/               # Integration tests
+│   │
+│   └── performance/               # Load/performance tests
 │
 └── docs/
+    │
+    ├── architecture.md            # System architecture
+    │
+    ├── api.md                     # API documentation
+    │
+    ├── graphql.md                 # GraphQL examples
+    │
+    └── deployment.md              # Deployment guide
