@@ -652,3 +652,10 @@ class VEDContractingEntityContact:
                          Repository Layer
                                   |
                         Databricks SQL
+
+
+FastAPI handles HTTP.
+Strawberry handles GraphQL queries.
+Service Layer enforces business rules.
+Repository Layer retrieves data from Databricks (primarily Gold views, and Silver when appropriate).
+SQLExecutor remains the single component responsible for executing SQL.
