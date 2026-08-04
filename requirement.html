@@ -653,15 +653,164 @@ class VEDContractingEntityContact:
                                   |
                         Databricks SQL
 
-from fastapi import FastAPI
 
-app = FastAPI(
-    title="XDATA API",
-    version="1.0.0"
-)
 
-@app.get("/")
-async def root():
-    return {
-        "message": "Welcome to XDATA API"
-    }
+                        """
+=============================================================
+File        : config.py
+Project     : XDATA API
+Description : Application Configuration
+
+Loads application configuration from the .env file using
+Pydantic Settings and exposes a singleton Settings object
+throughout the application.
+
+Author      : Alok Mohanty
+=============================================================
+"""
+
+from functools import lru_cache
+
+from pydantic import Field
+from pydantic_settings import BaseSettings, SettingsConfigDict
+
+
+class Settings(BaseSettings):
+    """
+    Central application configuration.
+
+    Configuration values are loaded automatically from
+    the .env file.
+    """
+
+    model_config = SettingsConfigDict(
+        env_file=".env",
+        env_file_encoding="utf-8",
+        case_sensitive=False,
+        extra="ignore"
+    )
+
+    ############################################################
+    # Application
+    ############################################################
+
+    app_name: str = Field(
+        default="XDATA API",
+        description="Application Name"
+    )
+
+    app_version: str = Field(
+        default="1.0.0",
+        description="Application Version"
+    )
+
+    environment: str = Field(
+        default="DEV",
+        description="Application Environment"
+    )
+
+    debug: bool = Field(
+        default=True,
+        description="Debug Mode"
+    )
+
+    host: str = Field(
+        default="127.0.0.1",
+        description="Application Host"
+    )
+
+    port: int = Field(
+        default=8080,
+        description="Application Port"
+    )
+
+    ############################################################
+    # JWT Authentication
+    ############################################################
+
+    jwt_secret_key: str = Field(
+        default="",
+        description="JWT Secret Key"
+    )
+
+    jwt_algorithm: str = Field(
+        default="HS256",
+        description="JWT Algorithm"
+    )
+
+    jwt_expiry_minutes: int = Field(
+        default=60,
+        description="JWT Expiry (Minutes)"
+    )
+
+    ############################################################
+    # Redis
+    ############################################################
+
+    redis_host: str = Field(
+        default="localhost",
+        description="Redis Host"
+    )
+
+    redis_port: int = Field(
+        default=6379,
+        description="Redis Port"
+    )
+
+    redis_db: int = Field(
+        default=0,
+        description="Redis Database"
+    )
+
+    ############################################################
+    # Kafka
+    ############################################################
+
+    kafka_bootstrap_servers: str = Field(
+        default="localhost:9092",
+        description="Kafka Bootstrap Servers"
+    )
+
+    ############################################################
+    # Databricks
+    ############################################################
+
+    databricks_server_hostname: str = Field(
+        default="",
+        description="Databricks Server Hostname"
+    )
+
+    databricks_http_path: str = Field(
+        default="",
+        description="Databricks HTTP Path"
+    )
+
+    databricks_access_token: str = Field(
+        default="",
+        description="Databricks Personal Access Token"
+    )
+
+    ############################################################
+    # Logging
+    ############################################################
+
+    log_level: str = Field(
+        default="INFO",
+        description="Application Log Level"
+    )
+
+
+@lru_cache(maxsize=1)
+def get_settings() -> Settings:
+    """
+    Returns a cached Settings instance.
+
+    The configuration is loaded only once during
+    application startup and reused throughout the
+    application's lifetime.
+    """
+    return Settings()
+
+
+# Singleton configuration object
+settings = get_settings()
