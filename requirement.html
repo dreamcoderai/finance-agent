@@ -661,7 +661,7 @@ Repository Layer retrieves data from Databricks (primarily Gold views, and Silve
 SQLExecutor remains the single component responsible for executing SQL.
 
 
-xdata_api/
+xdata-api/
 │
 ├── .venv/                                        # Python Virtual Environment
 ├── .env                                          # Environment Variables
@@ -671,147 +671,160 @@ xdata_api/
 ├── requirements.txt                              # Python Dependencies
 │
 ├── app.py                                        # FastAPI Bootstrap
-│                                                 # Registers Middleware
-│                                                 # Registers Swagger
-│                                                 # Registers REST
-│                                                 # Registers Strawberry GraphQL
-│                                                 # Starts Application
 │
 ├── core/
-│   │
-│   ├── config.py                                 # Load application configuration
-│   ├── middleware.py                             # CORS, Request Logging, Correlation ID
+│   ├── __init__.py
+│   ├── config.py                                 # Application Configuration
+│   ├── middleware.py                             # Middleware Registration
 │   ├── dependencies.py                           # Dependency Injection
-│   ├── security.py                               # Security helper functions
-│   ├── responses.py                              # Standard Success/Error Response Models
-│   └── openapi.py                                # Swagger/OpenAPI configuration
+│   ├── security.py                               # Security Utilities
+│   ├── responses.py                              # Standard API Responses
+│   └── openapi.py                                # OpenAPI Configuration
 │
 ├── interfaces/
-│   │
+│   ├── __init__.py
 │   ├── service.py                                # Base Service Interface
 │   ├── repository.py                             # Base Repository Interface
 │   ├── provider.py                               # Base Provider Interface
 │   ├── cache.py                                  # Base Cache Interface
-│   └── event_bus.py                              # Base Event Bus Interface
+│   └── eventbus.py                               # Base Event Bus Interface
 │
 ├── presentation/
+│   ├── __init__.py
 │   │
 │   ├── swagger/
-│   │   └── openapi.py                            # Swagger UI customization
+│   │   ├── __init__.py
+│   │   └── openapi.py                            # Swagger Configuration
 │   │
 │   ├── rest/
+│   │   ├── __init__.py
 │   │   ├── router.py                             # Master REST Router
-│   │   └── health.py                             # Health API
+│   │   └── health.py                             # Health Endpoint
 │   │
 │   └── graphql/
+│       ├── __init__.py
 │       ├── router.py                             # Strawberry Router
 │       ├── schema.py                             # Root Schema
 │       ├── queries.py                            # Root Queries
 │       ├── mutations.py                          # Root Mutations
-│       ├── types.py                              # Shared GraphQL Types
+│       ├── types.py                              # GraphQL Types
 │       ├── context.py                            # GraphQL Context
-│       └── dataloaders.py                        # N+1 Query Prevention
+│       └── dataloaders.py                        # Batch Data Loading
 │
 ├── domains/
+│   ├── __init__.py
 │   │
 │   └── contact/
+│       ├── __init__.py
+│       ├── router.py                             # Contact Router
 │       │
-│       ├── router.py                             # Register Contact APIs
-│       │
-│       ├── company_contact/
+│       ├── companycontact/
+│       │   ├── __init__.py
 │       │   ├── api.py                            # REST Controller
 │       │   ├── graphql.py                        # Strawberry Resolver
 │       │   ├── service.py                        # Business Logic
-│       │   ├── repository.py                     # Reads Gold Views
+│       │   ├── repository.py                     # Data Access
 │       │   ├── models.py                         # DTOs
+│       │   ├── enums.py                          # Domain Enums
 │       │   └── constants.py                      # View/Table Constants
 │       │
-│       ├── ce_contact/
+│       ├── cecontact/
+│       │   ├── __init__.py
 │       │   ├── api.py
 │       │   ├── graphql.py
 │       │   ├── service.py
 │       │   ├── repository.py
 │       │   ├── models.py
+│       │   ├── enums.py
 │       │   └── constants.py
 │       │
-│       └── external_contact/
+│       └── externalcontact/
+│           ├── __init__.py
 │           ├── api.py
 │           ├── graphql.py
 │           ├── service.py
 │           ├── repository.py
 │           ├── models.py
+│           ├── enums.py
 │           └── constants.py
 │
-├── data_sources/
-│   │
-│   ├── base_provider.py                          # Generic Data Source Contract
+├── datasources/
+│   ├── __init__.py
+│   ├── baseprovider.py                           # Base Data Source Contract
 │   │
 │   └── databricks/
-│       ├── connection.py                         # Databricks SQL Connection
-│       ├── query_executor.py                     # Execute SQL
-│       ├── query_builder.py                      # Build Dynamic SQL
-│       ├── databricks_provider.py                # Databricks Provider
+│       ├── __init__.py
+│       ├── connection.py                         # Databricks Connection
+│       ├── queryexecutor.py                      # SQL Execution Engine
+│       ├── querybuilder.py                       # Dynamic SQL Builder
+│       ├── databricksprovider.py                 # Databricks Provider
 │       └── exceptions.py                         # Databricks Exceptions
 │
 ├── infrastructure/
+│   ├── __init__.py
 │   │
 │   ├── auth/
-│   │   ├── jwt_manager.py                        # JWT Generation & Validation
-│   │   ├── auth_service.py                       # Authentication
-│   │   ├── authorization.py                      # RBAC Authorization
-│   │   ├── permissions.py                        # Permission Definitions
+│   │   ├── __init__.py
+│   │   ├── jwtmanager.py                         # JWT Manager
+│   │   ├── authservice.py                        # Authentication
+│   │   ├── authorization.py                      # Authorization
+│   │   ├── permissions.py                        # RBAC Permissions
 │   │   └── roles.py                              # System Roles
 │   │
 │   ├── cache/
-│   │   ├── redis_manager.py                      # Redis Connection
-│   │   └── cache_service.py                      # Cache Operations
+│   │   ├── __init__.py
+│   │   ├── redismanager.py                       # Redis Connection
+│   │   └── cacheservice.py                       # Cache Service
 │   │
 │   ├── events/
-│   │   ├── kafka_producer.py                     # Publish Events
-│   │   ├── kafka_consumer.py                     # Consume Events
-│   │   ├── event_bus.py                          # Event Abstraction
-│   │   └── event_models.py                       # Event DTOs
+│   │   ├── __init__.py
+│   │   ├── kafkaproducer.py                      # Kafka Producer
+│   │   ├── kafkaconsumer.py                      # Kafka Consumer
+│   │   ├── eventbus.py                           # Event Bus
+│   │   └── eventmodels.py                        # Event Models
 │   │
 │   ├── logging/
+│   │   ├── __init__.py
 │   │   ├── logger.py                             # Logging Configuration
-│   │   ├── request_logger.py                     # Request Logging
-│   │   ├── error_logger.py                       # Exception Logging
-│   │   ├── audit_logger.py                       # Business Audit Logging
-│   │   └── log_formatter.py                      # JSON/Text Formatter
+│   │   ├── requestlogger.py                      # Request Logging
+│   │   ├── errorlogger.py                        # Error Logging
+│   │   ├── auditlogger.py                        # Audit Logging
+│   │   └── logformatter.py                       # JSON Formatter
 │   │
 │   ├── exceptions/
-│   │   ├── base_exception.py                     # Base Application Exception
-│   │   ├── business_exception.py                 # Business Exceptions
-│   │   ├── validation_exception.py               # Validation Exceptions
-│   │   ├── repository_exception.py               # Repository Exceptions
-│   │   ├── authentication_exception.py           # Authentication Errors
-│   │   ├── authorization_exception.py            # Authorization Errors
-│   │   ├── databricks_exception.py               # Databricks Errors
-│   │   └── exception_handler.py                  # Global Exception Handler
+│   │   ├── __init__.py
+│   │   ├── baseexception.py                      # Base Exception
+│   │   ├── businessexception.py                  # Business Exception
+│   │   ├── validationexception.py                # Validation Exception
+│   │   ├── repositoryexception.py                # Repository Exception
+│   │   ├── authenticationexception.py            # Authentication Exception
+│   │   ├── authorizationexception.py             # Authorization Exception
+│   │   ├── databricksexception.py                # Databricks Exception
+│   │   └── exceptionhandler.py                   # Global Exception Handler
 │   │
 │   └── monitoring/
+│       ├── __init__.py
 │       ├── metrics.py                            # Application Metrics
 │       ├── tracing.py                            # Distributed Tracing
-│       └── health_monitor.py                     # Internal Health Monitoring
+│       └── healthmonitor.py                      # Internal Health Monitor
 │
 ├── shared/
-│   │
+│   ├── __init__.py
 │   ├── constants.py                              # Global Constants
-│   ├── enums.py                                  # Shared Enums
 │   ├── utilities.py                              # Utility Functions
 │   ├── validators.py                             # Common Validators
 │   ├── pagination.py                             # Pagination Helper
 │   └── filters.py                                # Generic Filtering
 │
 ├── tests/
-│   ├── unit/                                     # Unit Tests
-│   ├── integration/                              # Integration Tests
-│   └── performance/                              # Performance Tests
+│   ├── unit/
+│   ├── integration/
+│   └── performance/
 │
 └── docs/
-    ├── architecture.md                           # Architecture Guide
-    ├── api.md                                    # REST API Guide
-    ├── graphql.md                                # Strawberry Guide
-    ├── security.md                               # JWT/RBAC Guide
-    ├── deployment.md                             # Deployment Guide
-    └── databricks.md                             # Databricks Integration
+    ├── architecture.md
+    ├── api.md
+    ├── graphql.md
+    ├── security.md
+    ├── deployment.md
+    └── databricks.md
