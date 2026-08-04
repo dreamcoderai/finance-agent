@@ -660,171 +660,36 @@ Service Layer enforces business rules.
 Repository Layer retrieves data from Databricks (primarily Gold views, and Silver when appropriate).
 SQLExecutor remains the single component responsible for executing SQL.
 
+fastapi                      # High-performance REST API framework
 
-xdata-api/
-│
-├── .venv/                                        # Python Virtual Environment
-├── .env                                          # Environment Variables
-├── .env.example                                  # Sample Environment Variables
-├── .gitignore                                    # Git Ignore Rules
-├── README.md                                     # Project Documentation
-├── requirements.txt                              # Python Dependencies
-│
-├── app.py                                        # FastAPI Bootstrap
-│
-├── core/
-│   ├── __init__.py
-│   ├── config.py                                 # Application Configuration
-│   ├── middleware.py                             # Middleware Registration
-│   ├── dependencies.py                           # Dependency Injection
-│   ├── security.py                               # Security Utilities
-│   ├── responses.py                              # Standard API Responses
-│   └── openapi.py                                # OpenAPI Configuration
-│
-├── interfaces/
-│   ├── __init__.py
-│   ├── service.py                                # Base Service Interface
-│   ├── repository.py                             # Base Repository Interface
-│   ├── provider.py                               # Base Provider Interface
-│   ├── cache.py                                  # Base Cache Interface
-│   └── eventbus.py                               # Base Event Bus Interface
-│
-├── presentation/
-│   ├── __init__.py
-│   │
-│   ├── swagger/
-│   │   ├── __init__.py
-│   │   └── openapi.py                            # Swagger Configuration
-│   │
-│   ├── rest/
-│   │   ├── __init__.py
-│   │   ├── router.py                             # Master REST Router
-│   │   └── health.py                             # Health Endpoint
-│   │
-│   └── graphql/
-│       ├── __init__.py
-│       ├── router.py                             # Strawberry Router
-│       ├── schema.py                             # Root Schema
-│       ├── queries.py                            # Root Queries
-│       ├── mutations.py                          # Root Mutations
-│       ├── types.py                              # GraphQL Types
-│       ├── context.py                            # GraphQL Context
-│       └── dataloaders.py                        # Batch Data Loading
-│
-├── domains/
-│   ├── __init__.py
-│   │
-│   └── contact/
-│       ├── __init__.py
-│       ├── router.py                             # Contact Router
-│       │
-│       ├── companycontact/
-│       │   ├── __init__.py
-│       │   ├── api.py                            # REST Controller
-│       │   ├── graphql.py                        # Strawberry Resolver
-│       │   ├── service.py                        # Business Logic
-│       │   ├── repository.py                     # Data Access
-│       │   ├── models.py                         # DTOs
-│       │   ├── enums.py                          # Domain Enums
-│       │   └── constants.py                      # View/Table Constants
-│       │
-│       ├── cecontact/
-│       │   ├── __init__.py
-│       │   ├── api.py
-│       │   ├── graphql.py
-│       │   ├── service.py
-│       │   ├── repository.py
-│       │   ├── models.py
-│       │   ├── enums.py
-│       │   └── constants.py
-│       │
-│       └── externalcontact/
-│           ├── __init__.py
-│           ├── api.py
-│           ├── graphql.py
-│           ├── service.py
-│           ├── repository.py
-│           ├── models.py
-│           ├── enums.py
-│           └── constants.py
-│
-├── datasources/
-│   ├── __init__.py
-│   ├── baseprovider.py                           # Base Data Source Contract
-│   │
-│   └── databricks/
-│       ├── __init__.py
-│       ├── connection.py                         # Databricks Connection
-│       ├── queryexecutor.py                      # SQL Execution Engine
-│       ├── querybuilder.py                       # Dynamic SQL Builder
-│       ├── databricksprovider.py                 # Databricks Provider
-│       └── exceptions.py                         # Databricks Exceptions
-│
-├── infrastructure/
-│   ├── __init__.py
-│   │
-│   ├── auth/
-│   │   ├── __init__.py
-│   │   ├── jwtmanager.py                         # JWT Manager
-│   │   ├── authservice.py                        # Authentication
-│   │   ├── authorization.py                      # Authorization
-│   │   ├── permissions.py                        # RBAC Permissions
-│   │   └── roles.py                              # System Roles
-│   │
-│   ├── cache/
-│   │   ├── __init__.py
-│   │   ├── redismanager.py                       # Redis Connection
-│   │   └── cacheservice.py                       # Cache Service
-│   │
-│   ├── events/
-│   │   ├── __init__.py
-│   │   ├── kafkaproducer.py                      # Kafka Producer
-│   │   ├── kafkaconsumer.py                      # Kafka Consumer
-│   │   ├── eventbus.py                           # Event Bus
-│   │   └── eventmodels.py                        # Event Models
-│   │
-│   ├── logging/
-│   │   ├── __init__.py
-│   │   ├── logger.py                             # Logging Configuration
-│   │   ├── requestlogger.py                      # Request Logging
-│   │   ├── errorlogger.py                        # Error Logging
-│   │   ├── auditlogger.py                        # Audit Logging
-│   │   └── logformatter.py                       # JSON Formatter
-│   │
-│   ├── exceptions/
-│   │   ├── __init__.py
-│   │   ├── baseexception.py                      # Base Exception
-│   │   ├── businessexception.py                  # Business Exception
-│   │   ├── validationexception.py                # Validation Exception
-│   │   ├── repositoryexception.py                # Repository Exception
-│   │   ├── authenticationexception.py            # Authentication Exception
-│   │   ├── authorizationexception.py             # Authorization Exception
-│   │   ├── databricksexception.py                # Databricks Exception
-│   │   └── exceptionhandler.py                   # Global Exception Handler
-│   │
-│   └── monitoring/
-│       ├── __init__.py
-│       ├── metrics.py                            # Application Metrics
-│       ├── tracing.py                            # Distributed Tracing
-│       └── healthmonitor.py                      # Internal Health Monitor
-│
-├── shared/
-│   ├── __init__.py
-│   ├── constants.py                              # Global Constants
-│   ├── utilities.py                              # Utility Functions
-│   ├── validators.py                             # Common Validators
-│   ├── pagination.py                             # Pagination Helper
-│   └── filters.py                                # Generic Filtering
-│
-├── tests/
-│   ├── unit/
-│   ├── integration/
-│   └── performance/
-│
-└── docs/
-    ├── architecture.md
-    ├── api.md
-    ├── graphql.md
-    ├── security.md
-    ├── deployment.md
-    └── databricks.md
+uvicorn[standard]            # ASGI web server that runs FastAPI
+
+strawberry-graphql[fastapi]  # GraphQL framework integrated with FastAPI
+
+pydantic                     # Data validation and serialization
+
+pydantic-settings            # Load application configuration from .env
+
+python-dotenv                # Reads environment variables from .env file
+
+python-jose[cryptography]    # JWT token creation and validation
+
+passlib[bcrypt]              # Password hashing using bcrypt
+
+redis                        # Redis client for caching and sessions
+
+databricks-sql-connector     # Official Databricks SQL Connector
+
+confluent-kafka              # Kafka Producer and Consumer
+
+python-json-logger           # JSON formatted logging
+
+structlog                    # Structured enterprise logging
+
+httpx                        # Async HTTP client
+
+orjson                       # Ultra-fast JSON serialization
+
+pytest                       # Unit testing framework
+
+pytest-asyncio               # Async test support for FastAPI
