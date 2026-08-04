@@ -653,43 +653,15 @@ class VEDContractingEntityContact:
                                   |
                         Databricks SQL
 
+from fastapi import FastAPI
 
-FastAPI handles HTTP.
-Strawberry handles GraphQL queries.
-Service Layer enforces business rules.
-Repository Layer retrieves data from Databricks (primarily Gold views, and Silver when appropriate).
-SQLExecutor remains the single component responsible for executing SQL.
+app = FastAPI(
+    title="XDATA API",
+    version="1.0.0"
+)
 
-fastapi                      # High-performance REST API framework
-
-uvicorn[standard]            # ASGI web server that runs FastAPI
-
-strawberry-graphql[fastapi]  # GraphQL framework integrated with FastAPI
-
-pydantic                     # Data validation and serialization
-
-pydantic-settings            # Load application configuration from .env
-
-python-dotenv                # Reads environment variables from .env file
-
-python-jose[cryptography]    # JWT token creation and validation
-
-passlib[bcrypt]              # Password hashing using bcrypt
-
-redis                        # Redis client for caching and sessions
-
-databricks-sql-connector     # Official Databricks SQL Connector
-
-confluent-kafka              # Kafka Producer and Consumer
-
-python-json-logger           # JSON formatted logging
-
-structlog                    # Structured enterprise logging
-
-httpx                        # Async HTTP client
-
-orjson                       # Ultra-fast JSON serialization
-
-pytest                       # Unit testing framework
-
-pytest-asyncio               # Async test support for FastAPI
+@app.get("/")
+async def root():
+    return {
+        "message": "Welcome to XDATA API"
+    }
