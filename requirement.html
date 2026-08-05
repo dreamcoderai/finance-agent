@@ -543,123 +543,13 @@ GOLD_SCHEMA = "dbs_xdata_gold"
 MODEL_SCHEMA = "dbs_xdata_model"
 CONTEXT_SCHEMA = "dbs_xdata_context"
 
-from pathlib import Path
-
-from common.logger import logger
-from config.settings import CATALOG, GOLD_SCHEMA, SILVER_SCHEMA
-from database.sql_executor import SQLExecutor
 
 
-class VCUContractingEntityContact:
-
-    def __init__(self):
-        self.sql_executor = SQLExecutor()
-
-    def load(self):
-
-        logger.info("Starting VCU Contracting Entity Contact load.")
-
-        sql = self._load_sql()
-        sql = self._prepare_sql(sql)
-
-        self.sql_executor.execute(sql)
-
-        logger.info("VCU Contracting Entity Contact loaded successfully.")
-
-    def _load_sql(self):
-
-        sql_path = (
-            Path(__file__).parent
-            / "sql"
-            / "vcu_contracting_entity_contact.sql"
-        )
-
-        with open(sql_path, "r") as f:
-            return f.read()
-
-    def _prepare_sql(self, sql):
-
-        return (
-            sql.replace("${CATALOG}", CATALOG)
-               .replace("${SILVER_SCHEMA}", SILVER_SCHEMA)
-               .replace("${GOLD_SCHEMA}", GOLD_SCHEMA)
-        )
-
-
-
-
-
-
-
-        from pathlib import Path
-
-from common.logger import logger
-from config.settings import CATALOG, GOLD_SCHEMA, SILVER_SCHEMA
-from database.sql_executor import SQLExecutor
-
-
-class VEDContractingEntityContact:
-
-    def __init__(self):
-        self.sql_executor = SQLExecutor()
-
-    def load(self):
-
-        logger.info("Starting VED Contracting Entity Contact load.")
-
-        sql = self._load_sql()
-        sql = self._prepare_sql(sql)
-
-        self.sql_executor.execute(sql)
-
-        logger.info("VED Contracting Entity Contact loaded successfully.")
-
-    def _load_sql(self):
-
-        sql_path = (
-            Path(__file__).parent
-            / "sql"
-            / "ved_contracting_entity_contact.sql"
-        )
-
-        with open(sql_path, "r") as f:
-            return f.read()
-
-    def _prepare_sql(self, sql):
-
-        return (
-            sql.replace("${CATALOG}", CATALOG)
-               .replace("${SILVER_SCHEMA}", SILVER_SCHEMA)
-               .replace("${GOLD_SCHEMA}", GOLD_SCHEMA)
-        )
-
-
-
-                React / Mobile / AI Agent
-                             |
-                    HTTP / HTTPS
-                             |
-                        Uvicorn
-                             |
-                         FastAPI
-                       /       \
-             REST APIs          GraphQL
-                                  |
-                             Strawberry
-                                  |
-                           Service Layer
-                                  |
-                         Repository Layer
-                                  |
-                        Databricks SQL
-
-
-
-                        """
+"""
 #######################################################################
 Project     : XDATA API
 
-Description : GraphQL Query Root
+Description : GraphQL Types for Company Contact
 
 Author      : Alok Mohanty
 #######################################################################
@@ -669,46 +559,83 @@ import strawberry
 
 
 @strawberry.type
+class CompanyContactType:
+
+    company_case_safe_id: str
+    sf_contact_id: str
+    display_name: str
+    email: str
+    contact_status: str
+    contact_type: str
+
+
+
+
+
+
+
+
+
+    """
+#######################################################################
+Project     : XDATA API
+
+Description : GraphQL Resolver for Company Contact
+
+Author      : Alok Mohanty
+#######################################################################
+"""
+
+from typing import List
+
+from .service import CompanyContactService
+from .types import CompanyContactType
+
+
+class CompanyContactGraphQL:
+
+    @staticmethod
+    def get_company_contacts(limit: int = 10) -> List[CompanyContactType]:
+
+        rows = CompanyContactService.get_company_contacts(limit)
+
+        contacts = []
+
+        for row in rows:
+
+            contacts.append(
+                CompanyContactType(
+                    company_case_safe_id=row.Company_Case_Safe_ID,
+                    sf_contact_id=row.SF_Contact_ID,
+                    display_name=row.Display_Name,
+                    email=row.Email,
+                    contact_status=row.Contact_Status,
+                    contact_type=row.Contact_Type,
+                )
+            )
+
+        return contacts
+
+
+
+
+import strawberry
+
+from domains.contact.companycontact.graphql import CompanyContactGraphQL
+from domains.contact.companycontact.types import CompanyContactType
+
+
+@strawberry.type
 class Query:
 
     @strawberry.field
     def health(self) -> str:
-        """
-        Health check.
-        """
         return "GraphQL is running."
 
+    @strawberry.field
+    def company_contacts(
+        self,
+        limit: int = 10
+    ) -> list[CompanyContactType]:
 
-
-"""
-#######################################################################
-Project     : XDATA API
-
-Description : GraphQL Schema
-
-Author      : Alok Mohanty
-#######################################################################
-"""
-
-import strawberry
-
-from presentation.graphql.queries import Query
-
-schema = strawberry.Schema(query=Query)
-
-
-"""
-#######################################################################
-Project     : XDATA API
-
-Description : GraphQL Router
-
-Author      : Alok Mohanty
-#######################################################################
-"""
-
-from strawberry.fastapi import GraphQLRouter
-
-from presentation.graphql.schema import schema
-
-router = GraphQLRouter(schema)
+        return CompanyContactGraphQL.get_company_contacts(limit)
