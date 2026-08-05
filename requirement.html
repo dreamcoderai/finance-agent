@@ -655,38 +655,85 @@ class VEDContractingEntityContact:
 
 
 
-###############################################################
-# DATABRICKS
-###############################################################
+"""
+#######################################################################
+Project      : XDATA API
 
-DATABRICKS_SERVER_HOSTNAME=ssga-ga-nonprod1-ssga-ue1.cloud.databricks.com
-DATABRICKS_HTTP_PATH=/sql/1.0/warehouses/119a19aa1bcd9783
-DATABRICKS_ACCESS_TOKEN=xxxxxxxxxxxxxxxxxxxxxxxx
+Description  : Company Contact REST API
 
-DATABRICKS_CATALOG=dpe0421_dev_xdata
-DATABRICKS_GOLD_SCHEMA=dbs_xdata_gold
-DATABRICKS_SILVER_SCHEMA=dbs_xdata_silver
-DATABRICKS_BRONZE_SCHEMA=dbs_xdata_bronze
-DATABRICKS_CONTEXT_SCHEMA=dbs_xdata_context
-DATABRICKS_MODEL_SCHEMA=dbs_xdata_model
+Provides REST endpoints for Company Contact.
+
+Author       : Alok Mohanty
+#######################################################################
+"""
+
+from fastapi import APIRouter, Query
+
+from infrastructure.logging.logger import get_logger
+
+from .service import CompanyContactService
+
+logger = get_logger(__name__)
+
+router = APIRouter(
+    prefix="/companycontacts",
+    tags=["Company Contact"],
+)
+
+
+@router.get("/")
+def get_company_contacts(
+    limit: int = Query(
+        default=100,
+        ge=1,
+        le=1000,
+        description="Maximum number of records."
+    )
+):
+    """
+    Returns company contacts.
+    """
+
+    logger.info("REST request received for Company Contacts.")
+
+    rows = CompanyContactService.get_company_contacts(limit)
+
+    return rows
 
 
 
 """
-Unit Test - Company Contact Service
+Contact Domain Router
 """
 
-from infrastructure.logging.logger import configure_logger
+from fastapi import APIRouter
 
-from domains.contact.companycontact.service import CompanyContactService
+from domains.contact.companycontact.api import router as companycontactrouter
 
-configure_logger()
+router = APIRouter()
 
-rows = CompanyContactService.get_company_contacts(5)
+router.include_router(companycontactrouter)
 
-print("=" * 80)
-print("Company Contacts")
-print("=" * 80)
 
-for row in rows:
-    print(row)
+"""
+Master REST Router
+"""
+
+from fastapi import APIRouter
+
+from domains.contact.router import router as contactrouter
+
+router = APIRouter(
+    prefix="/api/v1"
+)
+
+router.include_router(contactrouter)
+
+
+from fastapi import FastAPI
+
+from presentation.rest.router import router as restrouter
+
+app = FastAPI()
+
+app.include_router(restrouter)
