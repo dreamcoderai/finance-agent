@@ -704,3 +704,17 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
+
+
+
+
+
+
+
+    from pathlib import Path
+import os
+
+print("Current Directory :", Path.cwd())
+print(".env Exists       :", Path(".env").exists())
+print("OS ENV            :", os.getenv("DATABRICKS_SERVER_HOSTNAME"))
+print("Settings Value    :", repr(settings.databricks_server_hostname))
