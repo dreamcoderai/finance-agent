@@ -670,18 +670,112 @@ DATABRICKS_BRONZE_SCHEMA=dbs_xdata_bronze
 DATABRICKS_CONTEXT_SCHEMA=dbs_xdata_context
 DATABRICKS_MODEL_SCHEMA=dbs_xdata_model
 
+
 """
-Unit Test - Query Executor
+#######################################################################
+Project      : XDATA API
+
+Description  : Databricks SQL Query Builder
+
+Builds SQL statements used by repositories.
+
+Author       : Alok Mohanty
+#######################################################################
 """
 
-from datasources.databricks.queryexecutor import QueryExecutor
+from core.config import settings
 
-query = "SHOW CATALOGS"
 
-rows = QueryExecutor.execute(query)
+class QueryBuilder:
+    """
+    Builds SQL statements for Databricks.
+    """
 
-print("\nAvailable Catalogs")
-print("=" * 60)
+    @staticmethod
+    def show_catalogs() -> str:
+        """
+        Returns SQL to list all Unity Catalogs.
+        """
+        return "SHOW CATALOGS"
 
-for row in rows:
-    print(row[0])
+    @staticmethod
+    def show_schemas() -> str:
+        """
+        Returns SQL to list schemas in the configured catalog.
+        """
+        return f"""
+        SHOW SCHEMAS IN {settings.databricks_catalog}
+        """
+
+    @staticmethod
+    def show_tables(schema: str) -> str:
+        """
+        Returns SQL to list tables/views in a schema.
+        """
+        return f"""
+        SHOW TABLES IN {settings.databricks_catalog}.{schema}
+        """
+
+    @staticmethod
+    def describe_table(schema: str, table: str) -> str:
+        """
+        Returns SQL to describe a table/view.
+        """
+        return f"""
+        DESCRIBE TABLE
+        {settings.databricks_catalog}.{schema}.{table}
+        """
+
+    @staticmethod
+    def select_all(schema: str, table: str, limit: int = 100) -> str:
+        """
+        Returns SQL to fetch rows from a table/view.
+        """
+        return f"""
+        SELECT *
+        FROM {settings.databricks_catalog}.{schema}.{table}
+        LIMIT {limit}
+        """
+
+
+
+
+
+
+
+
+
+        from datasources.databricks.querybuilder import QueryBuilder
+from core.config import settings
+
+print("=" * 80)
+print("Configured Catalog")
+print("=" * 80)
+
+print(settings.databricks_catalog)
+
+print("\nShow Catalogs")
+print(QueryBuilder.show_catalogs())
+
+print("\nShow Schemas")
+print(QueryBuilder.show_schemas())
+
+print("\nShow Tables")
+print(QueryBuilder.show_tables(settings.databricks_gold_schema))
+
+print("\nDescribe View")
+print(
+    QueryBuilder.describe_table(
+        settings.databricks_gold_schema,
+        "vcu_company_contact"
+    )
+)
+
+print("\nSelect")
+print(
+    QueryBuilder.select_all(
+        settings.databricks_gold_schema,
+        "vcu_company_contact",
+        limit=10
+    )
+)
