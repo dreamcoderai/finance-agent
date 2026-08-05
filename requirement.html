@@ -671,37 +671,64 @@ DATABRICKS_CONTEXT_SCHEMA=dbs_xdata_context
 DATABRICKS_MODEL_SCHEMA=dbs_xdata_model
 
 
-
+"""
 ###############################################################
-# Databricks Catalog
+Project       : XDATA API
+Description   : Unit Test for Databricks Connection
+
+Tests:
+1. Establish Databricks Connection
+2. Read Unity Catalogs
+
+Author        : Alok Mohanty
 ###############################################################
+"""
 
-databricks_catalog: str = Field(
-    default="",
-    description="Databricks Unity Catalog"
-)
+from datasources.databricks.connection import DatabricksConnection
+from infrastructure.logging.logger import configure_logger, get_logger
 
-databricks_gold_schema: str = Field(
-    default="",
-    description="Gold Schema"
-)
+configure_logger()
 
-databricks_silver_schema: str = Field(
-    default="",
-    description="Silver Schema"
-)
+logger = get_logger(__name__)
 
-databricks_bronze_schema: str = Field(
-    default="",
-    description="Bronze Schema"
-)
+connection = None
+cursor = None
 
-databricks_context_schema: str = Field(
-    default="",
-    description="Context Schema"
-)
+try:
+    logger.info("Starting Databricks connection test.")
 
-databricks_model_schema: str = Field(
-    default="",
-    description="Model Schema"
-)
+    # Establish Connection
+    connection = DatabricksConnection.get_connection()
+
+    # Create Cursor
+    cursor = connection.cursor()
+
+    logger.info("Reading available Unity Catalogs...")
+
+    # Execute SQL
+    cursor.execute("SHOW CATALOGS")
+
+    # Fetch Results
+    catalogs = cursor.fetchall()
+
+    print("\n" + "=" * 70)
+    print("AVAILABLE DATABRICKS CATALOGS")
+    print("=" * 70)
+
+    for index, catalog in enumerate(catalogs, start=1):
+        print(f"{index}. {catalog[0]}")
+
+    print("=" * 70)
+
+    logger.info("Successfully retrieved %s catalog(s).", len(catalogs))
+
+except Exception:
+    logger.exception("Failed to read Databricks catalogs.")
+    raise
+
+finally:
+
+    if cursor:
+        cursor.close()
+
+    DatabricksConnection.close_connection(connection)
