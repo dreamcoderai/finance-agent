@@ -660,8 +660,7 @@ File        : logger.py
 Project     : XDATA API
 Description : Central Logging Configuration
 
-Configures the application's logging framework and provides
-a reusable logger for all modules.
+Provides centralized logging for the application.
 
 Author      : Alok Mohanty
 ############################################################
@@ -669,26 +668,33 @@ Author      : Alok Mohanty
 
 import logging
 import sys
+from pathlib import Path
 
 from core.config import settings
+
+# Create logs directory if it doesn't exist
+LOG_DIRECTORY = Path("logs")
+LOG_DIRECTORY.mkdir(exist_ok=True)
+
+LOG_FILE = LOG_DIRECTORY / "application.log"
 
 
 def configure_logger() -> None:
     """
-    Configures the root logger for the application.
+    Configure application logging.
+
+    Logs are written to:
+        1. Console
+        2. logs/application.log
     """
 
     logging.basicConfig(
         level=settings.log_level.upper(),
-        format=(
-            "%(asctime)s | "
-            "%(levelname)-8s | "
-            "%(name)s | "
-            "%(message)s"
-        ),
+        format="%(asctime)s | %(levelname)s | %(name)s | %(message)s",
         datefmt="%Y-%m-%d %H:%M:%S",
         handlers=[
-            logging.StreamHandler(sys.stdout)
+            logging.StreamHandler(sys.stdout),
+            logging.FileHandler(LOG_FILE, encoding="utf-8")
         ],
         force=True
     )
@@ -696,13 +702,7 @@ def configure_logger() -> None:
 
 def get_logger(name: str) -> logging.Logger:
     """
-    Returns a logger instance.
-
-    Args:
-        name: Module name.
-
-    Returns:
-        Configured logger instance.
+    Return a configured logger.
     """
 
     return logging.getLogger(name)
