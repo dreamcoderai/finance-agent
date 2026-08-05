@@ -671,64 +671,18 @@ DATABRICKS_CONTEXT_SCHEMA=dbs_xdata_context
 DATABRICKS_MODEL_SCHEMA=dbs_xdata_model
 
 
-"""
-###############################################################
-Project       : XDATA API
-Description   : Unit Test for Databricks Connection
+@staticmethod
+def close_connection(connection) -> None:
+    """
+    Closes an active Databricks SQL connection.
+    """
 
-Tests:
-1. Establish Databricks Connection
-2. Read Unity Catalogs
+    if connection is None:
+        return
 
-Author        : Alok Mohanty
-###############################################################
-"""
+    try:
+        connection.close()
+        logger.info("Databricks connection closed successfully.")
 
-from datasources.databricks.connection import DatabricksConnection
-from infrastructure.logging.logger import configure_logger, get_logger
-
-configure_logger()
-
-logger = get_logger(__name__)
-
-connection = None
-cursor = None
-
-try:
-    logger.info("Starting Databricks connection test.")
-
-    # Establish Connection
-    connection = DatabricksConnection.get_connection()
-
-    # Create Cursor
-    cursor = connection.cursor()
-
-    logger.info("Reading available Unity Catalogs...")
-
-    # Execute SQL
-    cursor.execute("SHOW CATALOGS")
-
-    # Fetch Results
-    catalogs = cursor.fetchall()
-
-    print("\n" + "=" * 70)
-    print("AVAILABLE DATABRICKS CATALOGS")
-    print("=" * 70)
-
-    for index, catalog in enumerate(catalogs, start=1):
-        print(f"{index}. {catalog[0]}")
-
-    print("=" * 70)
-
-    logger.info("Successfully retrieved %s catalog(s).", len(catalogs))
-
-except Exception:
-    logger.exception("Failed to read Databricks catalogs.")
-    raise
-
-finally:
-
-    if cursor:
-        cursor.close()
-
-    DatabricksConnection.close_connection(connection)
+    except Exception:
+        logger.exception("Failed to close Databricks connection.")
