@@ -544,6 +544,40 @@ MODEL_SCHEMA = "dbs_xdata_model"
 CONTEXT_SCHEMA = "dbs_xdata_context"
 
 
+from datetime import datetime
+from typing import Optional
+
+import strawberry
+
+
+@strawberry.type
+class CompanyContactType:
+
+    company_case_safe_id: str
+    sf_contact_id: str
+
+    company_contact_role: Optional[str]
+
+    deleted_flag: Optional[str]
+
+    effective_start_date: Optional[datetime]
+    effective_end_date: Optional[datetime]
+
+    is_current_flag: Optional[str]
+
+    load_dts: Optional[datetime]
+
+    record_source: Optional[str]
+
+    display_name: Optional[str]
+    email: Optional[str]
+
+    contact_status: Optional[str]
+    contact_type: Optional[str]
+
+    preferred_language: Optional[str]
+
+
 query {
 
   companyContacts(limit: 5) {
