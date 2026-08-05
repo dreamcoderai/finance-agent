@@ -672,53 +672,18 @@ DATABRICKS_MODEL_SCHEMA=dbs_xdata_model
 
 
 
-"""
-#######################################################################
-Project      : XDATA API
 
-Description  : Company Contact Constants
+from infrastructure.logging.logger import configure_logger
 
-Author       : Alok Mohanty
-#######################################################################
-"""
+from domains.contact.companycontact.repository import CompanyContactRepository
 
-VCU_COMPANY_CONTACT_VIEW = "vcu_company_contact"
-VED_COMPANY_CONTACT_VIEW = "ved_company_contact"
+configure_logger()
 
+rows = CompanyContactRepository.get_company_contacts(5)
 
+print("=" * 80)
+print("Company Contacts")
+print("=" * 80)
 
-"""
-#######################################################################
-Project      : XDATA API
-
-Description  : Company Contact Repository
-
-Reads Company Contact data from Databricks Gold Views.
-
-Author       : Alok Mohanty
-#######################################################################
-"""
-
-from core.config import settings
-
-from datasources.databricks.databricksprovider import DatabricksProvider
-
-from .constants import VCU_COMPANY_CONTACT_VIEW
-
-
-class CompanyContactRepository:
-    """
-    Repository for Company Contact.
-    """
-
-    @staticmethod
-    def get_company_contacts(limit: int = 100):
-        """
-        Returns Company Contacts.
-        """
-
-        return DatabricksProvider.get_data(
-            schema=settings.databricks_gold_schema,
-            table=VCU_COMPANY_CONTACT_VIEW,
-            limit=limit,
-        )
+for row in rows:
+    print(row)
