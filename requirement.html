@@ -545,7 +545,6 @@ CONTEXT_SCHEMA = "dbs_xdata_context"
 
 
 from datetime import datetime
-from typing import Optional
 
 import strawberry
 
@@ -556,27 +555,26 @@ class CompanyContactType:
     company_case_safe_id: str
     sf_contact_id: str
 
-    company_contact_role: Optional[str]
+    company_contact_role: str | None
 
-    deleted_flag: Optional[str]
+    deleted_flag: str | None
 
-    effective_start_date: Optional[datetime]
-    effective_end_date: Optional[datetime]
+    effective_start_date: datetime | None
+    effective_end_date: datetime | None
 
-    is_current_flag: Optional[str]
+    is_current_flag: str | None
 
-    load_dts: Optional[datetime]
+    load_dts: datetime | None
 
-    record_source: Optional[str]
+    record_source: str | None
 
-    display_name: Optional[str]
-    email: Optional[str]
+    display_name: str | None
+    email: str | None
 
-    contact_status: Optional[str]
-    contact_type: Optional[str]
+    contact_status: str | None
+    contact_type: str | None
 
-    preferred_language: Optional[str]
-
+    preferred_language: str | None
 
 query {
 
