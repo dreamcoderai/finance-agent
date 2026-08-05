@@ -544,146 +544,28 @@ MODEL_SCHEMA = "dbs_xdata_model"
 CONTEXT_SCHEMA = "dbs_xdata_context"
 
 
+query {
 
+  companyContacts(limit: 5) {
 
-"""
-###############################################################
-Project     : XDATA API
-Module      : Company Contact GraphQL Types
-Author      : Alok Mohanty
-###############################################################
-"""
+    companyCaseSafeId
+    sfContactId
 
-from datetime import datetime
+    companyContactRole
 
-import strawberry
+    displayName
+    email
 
+    contactStatus
+    contactType
 
-@strawberry.type
-class CompanyContactType:
+    preferredLanguage
 
-    company_case_safe_id: str
-    sf_contact_id: str
+    effectiveStartDate
+    effectiveEndDate
 
-    company_contact_role: str
+    isCurrentFlag
 
-    deleted_flag: str
-
-    effective_start_date: datetime
-    effective_end_date: datetime
-
-    is_current_flag: str
-
-    load_dts: datetime
-
-    record_source: str
-
-    display_name: str
-    email: str
-
-    contact_status: str
-    contact_type: str
-
-    preferred_language: str
-
-
-
-
-
-
-
-    """
-###############################################################
-Project     : XDATA API
-Module      : Company Contact GraphQL Resolver
-Author      : Alok Mohanty
-###############################################################
-"""
-
-import strawberry
-
-from domains.contact.companycontact.service import CompanyContactService
-from domains.contact.companycontact.types import CompanyContactType
-
-
-@strawberry.type
-class CompanyContactQuery:
-
-    @strawberry.field
-    def company_contacts(
-        self,
-        limit: int = 10
-    ) -> list[CompanyContactType]:
-
-        rows = CompanyContactService.get_company_contacts(limit)
-
-        contacts = []
-
-        for row in rows:
-
-            contacts.append(
-
-                CompanyContactType(
-
-                    company_case_safe_id=row.Company_Case_Safe_ID,
-                    sf_contact_id=row.SF_Contact_ID,
-
-                    company_contact_role=row.Company_Contact_Role,
-
-                    deleted_flag=row.Deleted_Flag,
-
-                    effective_start_date=row.Effective_Start_Date,
-                    effective_end_date=row.Effective_End_Date,
-
-                    is_current_flag=row.IS_Current_Flag,
-
-                    load_dts=row.Load_DTS,
-
-                    record_source=row.Record_Source,
-
-                    display_name=row.Display_Name,
-                    email=row.Email,
-
-                    contact_status=row.Contact_Status,
-                    contact_type=row.Contact_Type,
-
-                    preferred_language=row.Preferred_Language,
-                )
-            )
-
-        return contacts
-
-
-
-
-
-        """
-###############################################################
-Project     : XDATA API
-Module      : Root GraphQL Query
-Author      : Alok Mohanty
-###############################################################
-"""
-
-import strawberry
-
-from domains.contact.companycontact.graphql import CompanyContactQuery
-
-
-@strawberry.type
-class HealthQuery:
-
-    @strawberry.field
-    def health(self) -> str:
-        return "GraphQL is running."
-
-
-@strawberry.type
-class Query(
-    HealthQuery,
-    CompanyContactQuery,
-):
-    """
-    Root GraphQL Query.
-    """
-    pass
+    recordSource
+  }
+}
