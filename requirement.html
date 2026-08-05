@@ -656,83 +656,70 @@ class VEDContractingEntityContact:
 
 
 
-                        """
-############################################################
-File        : test_connection.py
-Project     : XDATA API
-Description : Unit Test for Databricks Connection
+from databricks import sql
 
-Tests whether the application can establish a
-connection to Databricks SQL Warehouse.
-
-Author      : Alok Mohanty
-############################################################
-"""
-
-from datasources.databricks.connection import DatabricksConnection
-from infrastructure.logging.logger import configure_logger, get_logger
-
-configure_logger()
+from core.config import settings
+from infrastructure.logging.logger import get_logger
 
 logger = get_logger(__name__)
 
 
-def main() -> None:
+class DatabricksConnection:
     """
-    Test Databricks SQL connection.
+    Creates and manages Databricks SQL connections.
     """
 
-    logger.info("Starting Databricks connection test.")
+    @staticmethod
+    def get_connection():
+        """
+        Creates and returns an active Databricks SQL connection.
 
-    connection = None
+        Returns
+        -------
+        sql.Connection
+            Active Databricks SQL connection.
 
-    try:
-        connection = DatabricksConnection.get_connection()
+        Raises
+        ------
+        Exception
+            If connection cannot be established.
+        """
 
-        logger.info("Databricks connection established successfully.")
+        connection = None
 
-        print(connection)
+        try:
+            logger.info("Connecting to Databricks SQL Warehouse...")
 
-    finally:
+            connection = sql.connect(
+                server_hostname=settings.databricks_server_hostname,
+                http_path=settings.databricks_http_path,
+                access_token=settings.databricks_access_token,
+            )
 
-        if connection:
+            logger.info("Databricks connection established successfully.")
 
+            return connection
+
+        except Exception as ex:
+
+            logger.exception("Failed to establish Databricks connection.")
+
+            raise Exception(
+                "Unable to establish Databricks SQL connection."
+            ) from ex
+
+    @staticmethod
+    def close_connection(connection):
+        """
+        Safely closes an active Databricks connection.
+        """
+
+        if connection is None:
+            return
+
+        try:
             connection.close()
-
             logger.info("Databricks connection closed successfully.")
 
-
-if __name__ == "__main__":
-    main()
-
-
-
-
-
-
-
-    from pathlib import Path
-import os
-
-print("Current Directory :", Path.cwd())
-print(".env Exists       :", Path(".env").exists())
-print("OS ENV            :", os.getenv("DATABRICKS_SERVER_HOSTNAME"))
-print("Settings Value    :", repr(settings.databricks_server_hostname))
-
-
-
-from pydantic_settings import BaseSettings, SettingsConfigDict
-
-
-class TestSettings(BaseSettings):
-    test_value: str = ""
-
-    model_config = SettingsConfigDict(
-        env_file=".env",
-        env_file_encoding="utf-8"
-    )
-
-
-settings = TestSettings()
-
-print("Test Value:", settings.test_value)
+        except Exception:
+            logger.exception("Failed to close Databricks connection.")
