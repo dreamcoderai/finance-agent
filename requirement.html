@@ -670,87 +670,18 @@ DATABRICKS_BRONZE_SCHEMA=dbs_xdata_bronze
 DATABRICKS_CONTEXT_SCHEMA=dbs_xdata_context
 DATABRICKS_MODEL_SCHEMA=dbs_xdata_model
 
-
-
 """
-#######################################################################
-Project      : XDATA API
-
-Description  : Databricks SQL Query Executor
-
-Executes SQL statements against Databricks SQL Warehouse.
-
-Responsibilities
-----------------
-1. Execute SQL
-2. Fetch Results
-3. Manage Cursor
-4. Log Query Execution
-
-Author       : Alok Mohanty
-#######################################################################
+Unit Test - Query Executor
 """
 
-from typing import Any
+from datasources.databricks.queryexecutor import QueryExecutor
 
-from datasources.databricks.connection import DatabricksConnection
-from infrastructure.logging.logger import get_logger
+query = "SHOW CATALOGS"
 
-logger = get_logger(__name__)
+rows = QueryExecutor.execute(query)
 
+print("\nAvailable Catalogs")
+print("=" * 60)
 
-class QueryExecutor:
-    """
-    Executes SQL queries against Databricks SQL Warehouse.
-    """
-
-    @staticmethod
-    def execute(query: str) -> list[Any]:
-        """
-        Execute a SQL query and return all rows.
-
-        Parameters
-        ----------
-        query : str
-            SQL statement to execute.
-
-        Returns
-        -------
-        list[Any]
-            Query result.
-        """
-
-        connection = None
-        cursor = None
-
-        try:
-
-            logger.info("Executing SQL query.")
-
-            connection = DatabricksConnection.get_connection()
-
-            cursor = connection.cursor()
-
-            cursor.execute(query)
-
-            rows = cursor.fetchall()
-
-            logger.info(
-                "Query executed successfully. Rows returned: %d",
-                len(rows)
-            )
-
-            return rows
-
-        except Exception:
-
-            logger.exception("Failed to execute SQL query.")
-
-            raise
-
-        finally:
-
-            if cursor:
-                cursor.close()
-
-            DatabricksConnection.close_connection(connection)
+for row in rows:
+    print(row[0])
