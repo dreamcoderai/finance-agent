@@ -654,51 +654,53 @@ class VEDContractingEntityContact:
                         Databricks SQL
 
 
-"""
-############################################################
-File        : connection.py
-Project     : XDATA API
-Description : Databricks SQL Connection
 
-Creates and returns a Databricks SQL connection.
+
+                        """
+############################################################
+File        : test_connection.py
+Project     : XDATA API
+Description : Unit Test for Databricks Connection
+
+Tests whether the application can establish a
+connection to Databricks SQL Warehouse.
 
 Author      : Alok Mohanty
 ############################################################
 """
 
-from databricks import sql
+from datasources.databricks.connection import DatabricksConnection
+from infrastructure.logging.logger import configure_logger, get_logger
 
-from core.config import settings
-from infrastructure.logging.logger import get_logger
-
+configure_logger()
 
 logger = get_logger(__name__)
 
 
-class DatabricksConnection:
+def main() -> None:
     """
-    Creates Databricks SQL connections.
+    Test Databricks SQL connection.
     """
 
-    @staticmethod
-    def get_connection() -> sql.Connection:
-        """
-        Create and return a Databricks SQL connection.
+    logger.info("Starting Databricks connection test.")
 
-        Returns
-        -------
-        sql.Connection
-            Active Databricks SQL connection.
-        """
+    connection = None
 
-        logger.info("Connecting to Databricks SQL Warehouse.")
-
-        connection = sql.connect(
-            server_hostname=settings.databricks_server_hostname,
-            http_path=settings.databricks_http_path,
-            access_token=settings.databricks_access_token
-        )
+    try:
+        connection = DatabricksConnection.get_connection()
 
         logger.info("Databricks connection established successfully.")
 
-        return connection
+        print(connection)
+
+    finally:
+
+        if connection:
+
+            connection.close()
+
+            logger.info("Databricks connection closed successfully.")
+
+
+if __name__ == "__main__":
+    main()
