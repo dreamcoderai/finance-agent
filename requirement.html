@@ -671,18 +671,86 @@ DATABRICKS_CONTEXT_SCHEMA=dbs_xdata_context
 DATABRICKS_MODEL_SCHEMA=dbs_xdata_model
 
 
-@staticmethod
-def close_connection(connection) -> None:
+
+"""
+#######################################################################
+Project      : XDATA API
+
+Description  : Databricks SQL Query Executor
+
+Executes SQL statements against Databricks SQL Warehouse.
+
+Responsibilities
+----------------
+1. Execute SQL
+2. Fetch Results
+3. Manage Cursor
+4. Log Query Execution
+
+Author       : Alok Mohanty
+#######################################################################
+"""
+
+from typing import Any
+
+from datasources.databricks.connection import DatabricksConnection
+from infrastructure.logging.logger import get_logger
+
+logger = get_logger(__name__)
+
+
+class QueryExecutor:
     """
-    Closes an active Databricks SQL connection.
+    Executes SQL queries against Databricks SQL Warehouse.
     """
 
-    if connection is None:
-        return
+    @staticmethod
+    def execute(query: str) -> list[Any]:
+        """
+        Execute a SQL query and return all rows.
 
-    try:
-        connection.close()
-        logger.info("Databricks connection closed successfully.")
+        Parameters
+        ----------
+        query : str
+            SQL statement to execute.
 
-    except Exception:
-        logger.exception("Failed to close Databricks connection.")
+        Returns
+        -------
+        list[Any]
+            Query result.
+        """
+
+        connection = None
+        cursor = None
+
+        try:
+
+            logger.info("Executing SQL query.")
+
+            connection = DatabricksConnection.get_connection()
+
+            cursor = connection.cursor()
+
+            cursor.execute(query)
+
+            rows = cursor.fetchall()
+
+            logger.info(
+                "Query executed successfully. Rows returned: %d",
+                len(rows)
+            )
+
+            return rows
+
+        except Exception:
+
+            logger.exception("Failed to execute SQL query.")
+
+            raise
+
+        finally:
+
+            if cursor:
+                cursor.close()
+
+            DatabricksConnection.close_connection(connection)
