@@ -670,112 +670,113 @@ DATABRICKS_BRONZE_SCHEMA=dbs_xdata_bronze
 DATABRICKS_CONTEXT_SCHEMA=dbs_xdata_context
 DATABRICKS_MODEL_SCHEMA=dbs_xdata_model
 
-
 """
 #######################################################################
 Project      : XDATA API
 
-Description  : Databricks SQL Query Builder
+Description  : Databricks Provider
 
-Builds SQL statements used by repositories.
+Provides a reusable interface for executing SQL against
+Databricks SQL Warehouse.
+
+Responsibilities
+----------------
+1. Build SQL
+2. Execute SQL
+3. Return Results
 
 Author       : Alok Mohanty
 #######################################################################
 """
 
-from core.config import settings
+from typing import Any
+
+from datasources.databricks.query_builder import QueryBuilder
+from datasources.databricks.query_executor import QueryExecutor
+from infrastructure.logging.logger import get_logger
+
+logger = get_logger(__name__)
 
 
-class QueryBuilder:
+class DatabricksProvider:
     """
-    Builds SQL statements for Databricks.
+    Provider for Databricks SQL operations.
     """
 
     @staticmethod
-    def show_catalogs() -> str:
+    def get_catalogs() -> list[Any]:
         """
-        Returns SQL to list all Unity Catalogs.
+        Returns all Unity Catalogs.
         """
-        return "SHOW CATALOGS"
+
+        logger.info("Fetching Databricks catalogs.")
+
+        query = QueryBuilder.show_catalogs()
+
+        return QueryExecutor.execute(query)
 
     @staticmethod
-    def show_schemas() -> str:
+    def get_schemas() -> list[Any]:
         """
-        Returns SQL to list schemas in the configured catalog.
+        Returns schemas from configured catalog.
         """
-        return f"""
-        SHOW SCHEMAS IN {settings.databricks_catalog}
-        """
+
+        logger.info("Fetching schemas.")
+
+        query = QueryBuilder.show_schemas()
+
+        return QueryExecutor.execute(query)
 
     @staticmethod
-    def show_tables(schema: str) -> str:
+    def get_tables(schema: str) -> list[Any]:
         """
-        Returns SQL to list tables/views in a schema.
+        Returns tables/views from a schema.
         """
-        return f"""
-        SHOW TABLES IN {settings.databricks_catalog}.{schema}
-        """
+
+        logger.info("Fetching tables from schema %s.", schema)
+
+        query = QueryBuilder.show_tables(schema)
+
+        return QueryExecutor.execute(query)
 
     @staticmethod
-    def describe_table(schema: str, table: str) -> str:
+    def get_table_definition(
+        schema: str,
+        table: str,
+    ) -> list[Any]:
         """
-        Returns SQL to describe a table/view.
+        Returns table/view definition.
         """
-        return f"""
-        DESCRIBE TABLE
-        {settings.databricks_catalog}.{schema}.{table}
-        """
+
+        logger.info("Describing table %s.%s.", schema, table)
+
+        query = QueryBuilder.describe_table(
+            schema,
+            table,
+        )
+
+        return QueryExecutor.execute(query)
 
     @staticmethod
-    def select_all(schema: str, table: str, limit: int = 100) -> str:
+    def get_data(
+        schema: str,
+        table: str,
+        limit: int = 100,
+    ) -> list[Any]:
         """
-        Returns SQL to fetch rows from a table/view.
-        """
-        return f"""
-        SELECT *
-        FROM {settings.databricks_catalog}.{schema}.{table}
-        LIMIT {limit}
+        Returns rows from a table/view.
         """
 
+        logger.info(
+            "Fetching data from %s.%s.",
+            schema,
+            table,
+        )
 
+        query = QueryBuilder.select_all(
+            schema,
+            table,
+            limit,
+        )
 
-
-
-
-
-
-
-        from datasources.databricks.querybuilder import QueryBuilder
-from core.config import settings
-
-print("=" * 80)
-print("Configured Catalog")
-print("=" * 80)
-
-print(settings.databricks_catalog)
-
-print("\nShow Catalogs")
-print(QueryBuilder.show_catalogs())
-
-print("\nShow Schemas")
-print(QueryBuilder.show_schemas())
-
-print("\nShow Tables")
-print(QueryBuilder.show_tables(settings.databricks_gold_schema))
-
-print("\nDescribe View")
-print(
-    QueryBuilder.describe_table(
-        settings.databricks_gold_schema,
-        "vcu_company_contact"
-    )
-)
-
-print("\nSelect")
-print(
-    QueryBuilder.select_all(
-        settings.databricks_gold_schema,
-        "vcu_company_contact",
-        limit=10
-    )
-)
+        return QueryExecutor.execute(query)
