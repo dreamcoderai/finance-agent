@@ -655,71 +655,53 @@ class VEDContractingEntityContact:
 
 
 
+###############################################################
+# DATABRICKS
+###############################################################
 
-from databricks import sql
+DATABRICKS_SERVER_HOSTNAME=ssga-ga-nonprod1-ssga-ue1.cloud.databricks.com
+DATABRICKS_HTTP_PATH=/sql/1.0/warehouses/119a19aa1bcd9783
+DATABRICKS_ACCESS_TOKEN=xxxxxxxxxxxxxxxxxxxxxxxx
 
-from core.config import settings
-from infrastructure.logging.logger import get_logger
+DATABRICKS_CATALOG=dpe0421_dev_xdata
+DATABRICKS_GOLD_SCHEMA=dbs_xdata_gold
+DATABRICKS_SILVER_SCHEMA=dbs_xdata_silver
+DATABRICKS_BRONZE_SCHEMA=dbs_xdata_bronze
+DATABRICKS_CONTEXT_SCHEMA=dbs_xdata_context
+DATABRICKS_MODEL_SCHEMA=dbs_xdata_model
 
-logger = get_logger(__name__)
 
 
-class DatabricksConnection:
-    """
-    Creates and manages Databricks SQL connections.
-    """
+###############################################################
+# Databricks Catalog
+###############################################################
 
-    @staticmethod
-    def get_connection():
-        """
-        Creates and returns an active Databricks SQL connection.
+databricks_catalog: str = Field(
+    default="",
+    description="Databricks Unity Catalog"
+)
 
-        Returns
-        -------
-        sql.Connection
-            Active Databricks SQL connection.
+databricks_gold_schema: str = Field(
+    default="",
+    description="Gold Schema"
+)
 
-        Raises
-        ------
-        Exception
-            If connection cannot be established.
-        """
+databricks_silver_schema: str = Field(
+    default="",
+    description="Silver Schema"
+)
 
-        connection = None
+databricks_bronze_schema: str = Field(
+    default="",
+    description="Bronze Schema"
+)
 
-        try:
-            logger.info("Connecting to Databricks SQL Warehouse...")
+databricks_context_schema: str = Field(
+    default="",
+    description="Context Schema"
+)
 
-            connection = sql.connect(
-                server_hostname=settings.databricks_server_hostname,
-                http_path=settings.databricks_http_path,
-                access_token=settings.databricks_access_token,
-            )
-
-            logger.info("Databricks connection established successfully.")
-
-            return connection
-
-        except Exception as ex:
-
-            logger.exception("Failed to establish Databricks connection.")
-
-            raise Exception(
-                "Unable to establish Databricks SQL connection."
-            ) from ex
-
-    @staticmethod
-    def close_connection(connection):
-        """
-        Safely closes an active Databricks connection.
-        """
-
-        if connection is None:
-            return
-
-        try:
-            connection.close()
-            logger.info("Databricks connection closed successfully.")
-
-        except Exception:
-            logger.exception("Failed to close Databricks connection.")
+databricks_model_schema: str = Field(
+    default="",
+    description="Model Schema"
+)
