@@ -653,8 +653,7 @@ class VEDContractingEntityContact:
                                   |
                         Databricks SQL
 
-
- """
+"""
 ############################################################
 File        : logger.py
 Project     : XDATA API
@@ -668,41 +667,70 @@ Author      : Alok Mohanty
 
 import logging
 import sys
+from logging.handlers import RotatingFileHandler
 from pathlib import Path
 
 from core.config import settings
 
-# Create logs directory if it doesn't exist
+
+# ----------------------------------------------------------
+# Log Directory
+# ----------------------------------------------------------
+
 LOG_DIRECTORY = Path("logs")
-LOG_DIRECTORY.mkdir(exist_ok=True)
+LOG_DIRECTORY.mkdir(parents=True, exist_ok=True)
 
 LOG_FILE = LOG_DIRECTORY / "application.log"
 
 
 def configure_logger() -> None:
     """
-    Configure application logging.
+    Configure the application logger.
 
-    Logs are written to:
-        1. Console
-        2. logs/application.log
+    Logging Output
+    ----------------
+    1. Console
+    2. Rotating Log File
     """
 
-    logging.basicConfig(
-        level=settings.log_level.upper(),
-        format="%(asctime)s | %(levelname)s | %(name)s | %(message)s",
-        datefmt="%Y-%m-%d %H:%M:%S",
-        handlers=[
-            logging.StreamHandler(sys.stdout),
-            logging.FileHandler(LOG_FILE, encoding="utf-8")
-        ],
-        force=True
+    formatter = logging.Formatter(
+        fmt="%(asctime)s | %(levelname)-8s | %(name)s | %(message)s",
+        datefmt="%Y-%m-%d %H:%M:%S"
     )
+
+    console_handler = logging.StreamHandler(sys.stdout)
+    console_handler.setFormatter(formatter)
+
+    file_handler = RotatingFileHandler(
+        filename=LOG_FILE,
+        maxBytes=10 * 1024 * 1024,      # 10 MB
+        backupCount=10,                 # Keep last 10 log files
+        encoding="utf-8"
+    )
+    file_handler.setFormatter(formatter)
+
+    root_logger = logging.getLogger()
+
+    root_logger.setLevel(settings.log_level.upper())
+
+    root_logger.handlers.clear()
+
+    root_logger.addHandler(console_handler)
+    root_logger.addHandler(file_handler)
 
 
 def get_logger(name: str) -> logging.Logger:
     """
-    Return a configured logger.
+    Returns a logger instance.
+
+    Parameters
+    ----------
+    name : str
+        Module name (__name__)
+
+    Returns
+    -------
+    logging.Logger
     """
 
     return logging.getLogger(name)
