@@ -655,85 +655,60 @@ class VEDContractingEntityContact:
 
 
 
-"""
+                        """
 #######################################################################
-Project      : XDATA API
+Project     : XDATA API
 
-Description  : Company Contact REST API
+Description : GraphQL Query Root
 
-Provides REST endpoints for Company Contact.
-
-Author       : Alok Mohanty
+Author      : Alok Mohanty
 #######################################################################
 """
 
-from fastapi import APIRouter, Query
-
-from infrastructure.logging.logger import get_logger
-
-from .service import CompanyContactService
-
-logger = get_logger(__name__)
-
-router = APIRouter(
-    prefix="/companycontacts",
-    tags=["Company Contact"],
-)
+import strawberry
 
 
-@router.get("/")
-def get_company_contacts(
-    limit: int = Query(
-        default=100,
-        ge=1,
-        le=1000,
-        description="Maximum number of records."
-    )
-):
-    """
-    Returns company contacts.
-    """
+@strawberry.type
+class Query:
 
-    logger.info("REST request received for Company Contacts.")
-
-    rows = CompanyContactService.get_company_contacts(limit)
-
-    return rows
+    @strawberry.field
+    def health(self) -> str:
+        """
+        Health check.
+        """
+        return "GraphQL is running."
 
 
 
 """
-Contact Domain Router
+#######################################################################
+Project     : XDATA API
+
+Description : GraphQL Schema
+
+Author      : Alok Mohanty
+#######################################################################
 """
 
-from fastapi import APIRouter
+import strawberry
 
-from domains.contact.companycontact.api import router as companycontactrouter
+from presentation.graphql.queries import Query
 
-router = APIRouter()
-
-router.include_router(companycontactrouter)
+schema = strawberry.Schema(query=Query)
 
 
 """
-Master REST Router
+#######################################################################
+Project     : XDATA API
+
+Description : GraphQL Router
+
+Author      : Alok Mohanty
+#######################################################################
 """
 
-from fastapi import APIRouter
+from strawberry.fastapi import GraphQLRouter
 
-from domains.contact.router import router as contactrouter
+from presentation.graphql.schema import schema
 
-router = APIRouter(
-    prefix="/api/v1"
-)
-
-router.include_router(contactrouter)
-
-
-from fastapi import FastAPI
-
-from presentation.rest.router import router as restrouter
-
-app = FastAPI()
-
-app.include_router(restrouter)
+router = GraphQLRouter(schema)
