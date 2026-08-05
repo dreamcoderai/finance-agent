@@ -780,3 +780,27 @@ class DatabricksProvider:
         )
 
         return QueryExecutor.execute(query)
+
+
+
+
+
+
+
+        """
+Unit Test - Databricks Provider
+"""
+
+from datasources.databricks.databricksprovider import DatabricksProvider
+from infrastructure.logging.logger import configure_logger
+
+configure_logger()
+
+catalogs = DatabricksProvider.get_catalogs()
+
+print("=" * 80)
+print("AVAILABLE CATALOGS")
+print("=" * 80)
+
+for catalog in catalogs:
+    print(catalog[0])
