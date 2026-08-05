@@ -671,19 +671,69 @@ DATABRICKS_CONTEXT_SCHEMA=dbs_xdata_context
 DATABRICKS_MODEL_SCHEMA=dbs_xdata_model
 
 
+"""
+#######################################################################
+Project      : XDATA API
+
+Description  : Company Contact Service
+
+Contains business logic for Company Contact operations.
+
+Responsibilities
+----------------
+1. Business Validation
+2. Business Rules
+3. Data Transformation
+4. Call Repository
+
+Author       : Alok Mohanty
+#######################################################################
+"""
+
+from infrastructure.logging.logger import get_logger
+
+from .repository import CompanyContactRepository
+
+logger = get_logger(__name__)
 
 
-from infrastructure.logging.logger import configure_logger
+class CompanyContactService:
+    """
+    Company Contact business service.
+    """
 
-from domains.contact.companycontact.repository import CompanyContactRepository
+    @staticmethod
+    def get_company_contacts(limit: int = 100):
+        """
+        Returns company contacts.
 
-configure_logger()
+        Parameters
+        ----------
+        limit : int
+            Maximum number of records.
 
-rows = CompanyContactRepository.get_company_contacts(5)
+        Returns
+        -------
+        list
+            Company Contact records.
+        """
 
-print("=" * 80)
-print("Company Contacts")
-print("=" * 80)
+        logger.info(
+            "Fetching company contacts. Limit=%d",
+            limit
+        )
 
-for row in rows:
-    print(row)
+        if limit <= 0:
+            raise ValueError("Limit must be greater than zero.")
+
+        if limit > 1000:
+            limit = 1000
+
+        rows = CompanyContactRepository.get_company_contacts(limit)
+
+        logger.info(
+            "Retrieved %d company contact(s).",
+            len(rows)
+        )
+
+        return rows
