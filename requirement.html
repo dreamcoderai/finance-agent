@@ -653,84 +653,52 @@ class VEDContractingEntityContact:
                                   |
                         Databricks SQL
 
+
 """
 ############################################################
-File        : logger.py
+File        : connection.py
 Project     : XDATA API
-Description : Central Logging Configuration
+Description : Databricks SQL Connection
 
-Provides centralized logging for the application.
+Creates and returns a Databricks SQL connection.
 
 Author      : Alok Mohanty
 ############################################################
 """
 
-import logging
-import sys
-from logging.handlers import RotatingFileHandler
-from pathlib import Path
+from databricks import sql
 
 from core.config import settings
+from infrastructure.logging.logger import get_logger
 
 
-# ----------------------------------------------------------
-# Log Directory
-# ----------------------------------------------------------
-
-LOG_DIRECTORY = Path("logs")
-LOG_DIRECTORY.mkdir(parents=True, exist_ok=True)
-
-LOG_FILE = LOG_DIRECTORY / "application.log"
+logger = get_logger(__name__)
 
 
-def configure_logger() -> None:
+class DatabricksConnection:
     """
-    Configure the application logger.
-
-    Logging Output
-    ----------------
-    1. Console
-    2. Rotating Log File
+    Creates Databricks SQL connections.
     """
 
-    formatter = logging.Formatter(
-        fmt="%(asctime)s | %(levelname)-8s | %(name)s | %(message)s",
-        datefmt="%Y-%m-%d %H:%M:%S"
-    )
+    @staticmethod
+    def get_connection() -> sql.Connection:
+        """
+        Create and return a Databricks SQL connection.
 
-    console_handler = logging.StreamHandler(sys.stdout)
-    console_handler.setFormatter(formatter)
+        Returns
+        -------
+        sql.Connection
+            Active Databricks SQL connection.
+        """
 
-    file_handler = RotatingFileHandler(
-        filename=LOG_FILE,
-        maxBytes=10 * 1024 * 1024,      # 10 MB
-        backupCount=10,                 # Keep last 10 log files
-        encoding="utf-8"
-    )
-    file_handler.setFormatter(formatter)
+        logger.info("Connecting to Databricks SQL Warehouse.")
 
-    root_logger = logging.getLogger()
+        connection = sql.connect(
+            server_hostname=settings.databricks_server_hostname,
+            http_path=settings.databricks_http_path,
+            access_token=settings.databricks_access_token
+        )
 
-    root_logger.setLevel(settings.log_level.upper())
+        logger.info("Databricks connection established successfully.")
 
-    root_logger.handlers.clear()
-
-    root_logger.addHandler(console_handler)
-    root_logger.addHandler(file_handler)
-
-
-def get_logger(name: str) -> logging.Logger:
-    """
-    Returns a logger instance.
-
-    Parameters
-    ----------
-    name : str
-        Module name (__name__)
-
-    Returns
-    -------
-    logging.Logger
-    """
-
-    return logging.getLogger(name)
+        return connection
