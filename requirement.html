@@ -718,3 +718,21 @@ print("Current Directory :", Path.cwd())
 print(".env Exists       :", Path(".env").exists())
 print("OS ENV            :", os.getenv("DATABRICKS_SERVER_HOSTNAME"))
 print("Settings Value    :", repr(settings.databricks_server_hostname))
+
+
+
+from pydantic_settings import BaseSettings, SettingsConfigDict
+
+
+class TestSettings(BaseSettings):
+    test_value: str = ""
+
+    model_config = SettingsConfigDict(
+        env_file=".env",
+        env_file_encoding="utf-8"
+    )
+
+
+settings = TestSettings()
+
+print("Test Value:", settings.test_value)
