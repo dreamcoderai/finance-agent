@@ -670,137 +670,55 @@ DATABRICKS_BRONZE_SCHEMA=dbs_xdata_bronze
 DATABRICKS_CONTEXT_SCHEMA=dbs_xdata_context
 DATABRICKS_MODEL_SCHEMA=dbs_xdata_model
 
+
+
 """
 #######################################################################
 Project      : XDATA API
 
-Description  : Databricks Provider
-
-Provides a reusable interface for executing SQL against
-Databricks SQL Warehouse.
-
-Responsibilities
-----------------
-1. Build SQL
-2. Execute SQL
-3. Return Results
+Description  : Company Contact Constants
 
 Author       : Alok Mohanty
 #######################################################################
 """
 
-from typing import Any
-
-from datasources.databricks.query_builder import QueryBuilder
-from datasources.databricks.query_executor import QueryExecutor
-from infrastructure.logging.logger import get_logger
-
-logger = get_logger(__name__)
-
-
-class DatabricksProvider:
-    """
-    Provider for Databricks SQL operations.
-    """
-
-    @staticmethod
-    def get_catalogs() -> list[Any]:
-        """
-        Returns all Unity Catalogs.
-        """
-
-        logger.info("Fetching Databricks catalogs.")
-
-        query = QueryBuilder.show_catalogs()
-
-        return QueryExecutor.execute(query)
-
-    @staticmethod
-    def get_schemas() -> list[Any]:
-        """
-        Returns schemas from configured catalog.
-        """
-
-        logger.info("Fetching schemas.")
-
-        query = QueryBuilder.show_schemas()
-
-        return QueryExecutor.execute(query)
-
-    @staticmethod
-    def get_tables(schema: str) -> list[Any]:
-        """
-        Returns tables/views from a schema.
-        """
-
-        logger.info("Fetching tables from schema %s.", schema)
-
-        query = QueryBuilder.show_tables(schema)
-
-        return QueryExecutor.execute(query)
-
-    @staticmethod
-    def get_table_definition(
-        schema: str,
-        table: str,
-    ) -> list[Any]:
-        """
-        Returns table/view definition.
-        """
-
-        logger.info("Describing table %s.%s.", schema, table)
-
-        query = QueryBuilder.describe_table(
-            schema,
-            table,
-        )
-
-        return QueryExecutor.execute(query)
-
-    @staticmethod
-    def get_data(
-        schema: str,
-        table: str,
-        limit: int = 100,
-    ) -> list[Any]:
-        """
-        Returns rows from a table/view.
-        """
-
-        logger.info(
-            "Fetching data from %s.%s.",
-            schema,
-            table,
-        )
-
-        query = QueryBuilder.select_all(
-            schema,
-            table,
-            limit,
-        )
-
-        return QueryExecutor.execute(query)
+VCU_COMPANY_CONTACT_VIEW = "vcu_company_contact"
+VED_COMPANY_CONTACT_VIEW = "ved_company_contact"
 
 
 
+"""
+#######################################################################
+Project      : XDATA API
 
+Description  : Company Contact Repository
 
+Reads Company Contact data from Databricks Gold Views.
 
-
-        """
-Unit Test - Databricks Provider
+Author       : Alok Mohanty
+#######################################################################
 """
 
+from core.config import settings
+
 from datasources.databricks.databricksprovider import DatabricksProvider
-from infrastructure.logging.logger import configure_logger
 
-configure_logger()
+from .constants import VCU_COMPANY_CONTACT_VIEW
 
-catalogs = DatabricksProvider.get_catalogs()
 
-print("=" * 80)
-print("AVAILABLE CATALOGS")
-print("=" * 80)
+class CompanyContactRepository:
+    """
+    Repository for Company Contact.
+    """
 
-for catalog in catalogs:
-    print(catalog[0])
+    @staticmethod
+    def get_company_contacts(limit: int = 100):
+        """
+        Returns Company Contacts.
+        """
+
+        return DatabricksProvider.get_data(
+            schema=settings.databricks_gold_schema,
+            table=VCU_COMPANY_CONTACT_VIEW,
+            limit=limit,
+        )
