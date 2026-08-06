@@ -1,88 +1,37 @@
 """
 Project     : XDATA API
-Description : Redis Client
+Description : Redis Cache Key Builder
 Author      : Alok Mohanty
 """
 
-import redis
 
-from core.config import settings
-
-
-class RedisClient:
+class CacheKeys:
     """
-    Singleton Redis Client.
-    """
-
-    _client = None
-
-    @classmethod
-    def get_client(cls):
-        """
-        Returns a singleton Redis client.
-        """
-
-        if cls._client is None:
-
-            cls._client = redis.Redis(
-                host=settings.redis_host,
-                port=settings.redis_port,
-                db=settings.redis_db,
-                password=settings.redis_password or None,
-                decode_responses=True,
-            )
-
-        return cls._client
-
-
-
-"""
-Project     : XDATA API
-Description : Redis Service
-Author      : Alok Mohanty
-"""
-
-import json
-
-from core.config import settings
-from infrastructure.redis.redis_client import RedisClient
-
-
-class RedisService:
-    """
-    Helper class for Redis operations.
+    Generic Redis cache key generator.
     """
 
     @staticmethod
-    def get(key: str):
+    def build(entity: str, **kwargs) -> str:
+        """
+        Example:
 
-        value = RedisClient.get_client().get(key)
-
-        if value:
-            return json.loads(value)
-
-        return None
-
-    @staticmethod
-    def set(key: str, value):
-
-        RedisClient.get_client().setex(
-            key,
-            settings.redis_cache_ttl,
-            json.dumps(value, default=str),
+        CacheKeys.build(
+            "company_contacts",
+            sf_contact_id="0030...",
+            limit=100
         )
 
-    @staticmethod
-    def delete(key: str):
+        Returns:
 
-        RedisClient.get_client().delete(key)
+        company_contacts:limit=100:sf_contact_id=0030...
+        """
 
-    @staticmethod
-    def exists(key: str):
+        parts = [entity]
 
-        return RedisClient.get_client().exists(key)
+        for key in sorted(kwargs.keys()):
+            value = kwargs[key]
 
-    @staticmethod
-    def clear():
+            if value is not None:
+                parts.append(f"{key}={value}")
 
-        RedisClient.get_client().flushdb()
+        return ":".join(parts)
