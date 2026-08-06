@@ -1,37 +1,62 @@
-"""
-Project     : XDATA API
-Description : Redis Cache Key Builder
-Author      : Alok Mohanty
-"""
+from infrastructure.redis.cache_keys import CacheKeys
+from infrastructure.redis.redis_service import RedisService
 
-
-class CacheKeys:
-    """
-    Generic Redis cache key generator.
-    """
+class CompanyContactRepository:
 
     @staticmethod
-    def build(entity: str, **kwargs) -> str:
-        """
-        Example:
+    def get_company_contacts(
+        company_case_safe_id=None,
+        sf_contact_id=None,
+        email=None,
+        contact_status=None,
+        contact_type=None,
+        preferred_language=None,
+        limit=100,
+    ):
 
-        CacheKeys.build(
+        # --------------------------------------------------
+        # Build Cache Key
+        # --------------------------------------------------
+        cache_key = CacheKeys.build(
             "company_contacts",
-            sf_contact_id="0030...",
-            limit=100
+            company_case_safe_id=company_case_safe_id,
+            sf_contact_id=sf_contact_id,
+            email=email,
+            contact_status=contact_status,
+            contact_type=contact_type,
+            preferred_language=preferred_language,
+            limit=limit,
         )
 
-        Returns:
+        # --------------------------------------------------
+        # Check Redis
+        # --------------------------------------------------
+        cached = RedisService.get(cache_key)
 
-        company_contacts:limit=100:sf_contact_id=0030...
-        """
+        if cached is not None:
+            logger.info("Cache Hit : %s", cache_key)
+            return cached
 
-        parts = [entity]
+        logger.info("Cache Miss : %s", cache_key)
 
-        for key in sorted(kwargs.keys()):
-            value = kwargs[key]
+        # --------------------------------------------------
+        # Fetch from Databricks
+        # --------------------------------------------------
+        rows = DatabricksProvider.get_company_contacts(
+            company_case_safe_id=company_case_safe_id,
+            sf_contact_id=sf_contact_id,
+            email=email,
+            contact_status=contact_status,
+            contact_type=contact_type,
+            preferred_language=preferred_language,
+            limit=limit,
+        )
 
-            if value is not None:
-                parts.append(f"{key}={value}")
+        # --------------------------------------------------
+        # Store in Redis
+        # --------------------------------------------------
+        RedisService.set(cache_key, rows)
 
-        return ":".join(parts)
+        logger.info("Stored %s rows in Redis.", len(rows))
+
+        return rows
