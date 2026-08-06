@@ -1,9 +1,22 @@
-return DatabricksProvider.get_company_contacts(
-    company_case_safe_id=company_case_safe_id,
-    sf_contact_id=sf_contact_id,
-    email=email,
-    contact_status=contact_status,
-    contact_type=contact_type,
-    preferred_language=preferred_language,
-    limit=limit,
-)
+    @staticmethod
+    def get_company_contacts(
+        company_case_safe_id: str | None = None,
+        sf_contact_id: str | None = None,
+        email: str | None = None,
+        contact_status: str | None = None,
+        contact_type: str | None = None,
+        preferred_language: str | None = None,
+        limit: int = 100,
+    ):
+
+        query = QueryBuilder.build_company_contact_query(
+            company_case_safe_id=company_case_safe_id,
+            sf_contact_id=sf_contact_id,
+            email=email,
+            contact_status=contact_status,
+            contact_type=contact_type,
+            preferred_language=preferred_language,
+            limit=limit,
+        )
+
+        return QueryExecutor.execute(query)
