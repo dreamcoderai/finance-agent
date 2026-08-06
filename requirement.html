@@ -1,3 +1,114 @@
+"""
+#######################################################################
+Project      : XDATA API
+
+Description  : Databricks Provider
+
+Provides reusable methods for executing SQL against
+Databricks SQL Warehouse.
+
+Responsibilities
+----------------
+1. Build SQL
+2. Execute SQL
+3. Return Results
+
+Author       : Alok Mohanty
+#######################################################################
+"""
+
+from typing import Any
+
+from datasources.databricks.querybuilder import QueryBuilder
+from datasources.databricks.queryexecutor import QueryExecutor
+from infrastructure.logging.logger import get_logger
+
+logger = get_logger(__name__)
+
+
+class DatabricksProvider:
+    """
+    Provider for Databricks SQL operations.
+    """
+
+    @staticmethod
+    def get_catalogs() -> list[Any]:
+        """
+        Returns all Unity Catalogs.
+        """
+
+        logger.info("Fetching Databricks catalogs.")
+
+        query = QueryBuilder.show_catalogs()
+
+        return QueryExecutor.execute(query)
+
+    @staticmethod
+    def get_schemas() -> list[Any]:
+        """
+        Returns schemas from configured catalog.
+        """
+
+        logger.info("Fetching Databricks schemas.")
+
+        query = QueryBuilder.show_schemas()
+
+        return QueryExecutor.execute(query)
+
+    @staticmethod
+    def get_tables(schema: str) -> list[Any]:
+        """
+        Returns all tables/views from a schema.
+        """
+
+        logger.info("Fetching tables from schema: %s", schema)
+
+        query = QueryBuilder.show_tables(schema)
+
+        return QueryExecutor.execute(query)
+
+    @staticmethod
+    def get_table_definition(
+        schema: str,
+        table: str,
+    ) -> list[Any]:
+        """
+        Returns table/view metadata.
+        """
+
+        logger.info("Describing table: %s.%s", schema, table)
+
+        query = QueryBuilder.describe_table(
+            schema=schema,
+            table=table,
+        )
+
+        return QueryExecutor.execute(query)
+
+    @staticmethod
+    def get_data(
+        schema: str,
+        table: str,
+        limit: int = 100,
+    ) -> list[Any]:
+        """
+        Generic SELECT * FROM <table>.
+        """
+
+        logger.info(
+            "Fetching data from %s.%s",
+            schema,
+            table,
+        )
+
+        query = QueryBuilder.select_all(
+            schema=schema,
+            table=table,
+            limit=limit,
+        )
+
+        return QueryExecutor.execute(query)
+
     @staticmethod
     def get_company_contacts(
         company_case_safe_id: str | None = None,
@@ -7,7 +118,12 @@
         contact_type: str | None = None,
         preferred_language: str | None = None,
         limit: int = 100,
-    ):
+    ) -> list[Any]:
+        """
+        Returns Company Contact records using dynamic filters.
+        """
+
+        logger.info("Fetching Company Contacts.")
 
         query = QueryBuilder.build_company_contact_query(
             company_case_safe_id=company_case_safe_id,
