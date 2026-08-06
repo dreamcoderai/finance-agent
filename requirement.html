@@ -1,3 +1,6 @@
+from core.config import settings
+
+
 class QueryBuilder:
 
     @staticmethod
@@ -9,5 +12,38 @@ class QueryBuilder:
         contact_type=None,
         preferred_language=None,
         limit=100,
-    ):
-        ...
+    ) -> str:
+
+        query = f"""
+        SELECT *
+        FROM {settings.databricks_catalog}.
+             {settings.databricks_gold_schema}.
+             vcu_company_contact
+        """
+
+        filters = []
+
+        if company_case_safe_id:
+            filters.append(f"Company_Case_Safe_ID = '{company_case_safe_id}'")
+
+        if sf_contact_id:
+            filters.append(f"SF_Contact_ID = '{sf_contact_id}'")
+
+        if email:
+            filters.append(f"Email = '{email}'")
+
+        if contact_status:
+            filters.append(f"Contact_Status = '{contact_status}'")
+
+        if contact_type:
+            filters.append(f"Contact_Type = '{contact_type}'")
+
+        if preferred_language:
+            filters.append(f"Preferred_Language = '{preferred_language}'")
+
+        if filters:
+            query += "\nWHERE " + " AND ".join(filters)
+
+        query += f"\nLIMIT {limit}"
+
+        return query
