@@ -1,16 +1,8 @@
-redis_host: str = Field(default="localhost")
-redis_port: int = Field(default=6379)
-redis_db: int = Field(default=0)
-redis_password: str = Field(default="")
-redis_cache_ttl: int = Field(default=300)
-
-
-infrastructure/
-    redis/
-        __init__.py
-        redis_client.py
-        redis_service.py
-
+"""
+Project     : XDATA API
+Description : Redis Client
+Author      : Alok Mohanty
+"""
 
 import redis
 
@@ -18,11 +10,17 @@ from core.config import settings
 
 
 class RedisClient:
+    """
+    Singleton Redis Client.
+    """
 
     _client = None
 
     @classmethod
     def get_client(cls):
+        """
+        Returns a singleton Redis client.
+        """
 
         if cls._client is None:
 
@@ -37,81 +35,54 @@ class RedisClient:
         return cls._client
 
 
+
+"""
+Project     : XDATA API
+Description : Redis Service
+Author      : Alok Mohanty
+"""
+
 import json
 
+from core.config import settings
 from infrastructure.redis.redis_client import RedisClient
 
 
 class RedisService:
+    """
+    Helper class for Redis operations.
+    """
 
     @staticmethod
-    def get(key):
+    def get(key: str):
 
         value = RedisClient.get_client().get(key)
 
         if value:
-
             return json.loads(value)
 
         return None
 
     @staticmethod
-    def set(key, value, ttl):
+    def set(key: str, value):
 
         RedisClient.get_client().setex(
             key,
-            ttl,
+            settings.redis_cache_ttl,
             json.dumps(value, default=str),
         )
 
     @staticmethod
-    def delete(key):
+    def delete(key: str):
 
         RedisClient.get_client().delete(key)
 
+    @staticmethod
+    def exists(key: str):
 
-
-
-
-        cache_key = build_key(...)
-
-cached = RedisService.get(cache_key)
-
-if cached:
-    return cached
-
-rows = DatabricksProvider.get_company_contacts(...)
-
-RedisService.set(
-    cache_key,
-    rows,
-    settings.redis_cache_ttl,
-)
-
-return rows
-
-
-
-class CacheKeys:
+        return RedisClient.get_client().exists(key)
 
     @staticmethod
-    def company_contacts(
-        company_case_safe_id,
-        sf_contact_id,
-        email,
-        contact_status,
-        contact_type,
-        preferred_language,
-        limit,
-    ):
+    def clear():
 
-        return (
-            f"company_contacts:"
-            f"{company_case_safe_id}:"
-            f"{sf_contact_id}:"
-            f"{email}:"
-            f"{contact_status}:"
-            f"{contact_type}:"
-            f"{preferred_language}:"
-            f"{limit}"
-        )
+        RedisClient.get_client().flushdb()
