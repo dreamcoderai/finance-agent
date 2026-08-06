@@ -1,49 +1,117 @@
+redis_host: str = Field(default="localhost")
+redis_port: int = Field(default=6379)
+redis_db: int = Field(default=0)
+redis_password: str = Field(default="")
+redis_cache_ttl: int = Field(default=300)
+
+
+infrastructure/
+    redis/
+        __init__.py
+        redis_client.py
+        redis_service.py
+
+
+import redis
+
 from core.config import settings
 
 
-class QueryBuilder:
+class RedisClient:
+
+    _client = None
+
+    @classmethod
+    def get_client(cls):
+
+        if cls._client is None:
+
+            cls._client = redis.Redis(
+                host=settings.redis_host,
+                port=settings.redis_port,
+                db=settings.redis_db,
+                password=settings.redis_password or None,
+                decode_responses=True,
+            )
+
+        return cls._client
+
+
+import json
+
+from infrastructure.redis.redis_client import RedisClient
+
+
+class RedisService:
 
     @staticmethod
-    def build_company_contact_query(
-        company_case_safe_id=None,
-        sf_contact_id=None,
-        email=None,
-        contact_status=None,
-        contact_type=None,
-        preferred_language=None,
-        limit=100,
-    ) -> str:
+    def get(key):
 
-        query = f"""
-        SELECT *
-        FROM {settings.databricks_catalog}.
-             {settings.databricks_gold_schema}.
-             vcu_company_contact
-        """
+        value = RedisClient.get_client().get(key)
 
-        filters = []
+        if value:
 
-        if company_case_safe_id:
-            filters.append(f"Company_Case_Safe_ID = '{company_case_safe_id}'")
+            return json.loads(value)
 
-        if sf_contact_id:
-            filters.append(f"SF_Contact_ID = '{sf_contact_id}'")
+        return None
 
-        if email:
-            filters.append(f"Email = '{email}'")
+    @staticmethod
+    def set(key, value, ttl):
 
-        if contact_status:
-            filters.append(f"Contact_Status = '{contact_status}'")
+        RedisClient.get_client().setex(
+            key,
+            ttl,
+            json.dumps(value, default=str),
+        )
 
-        if contact_type:
-            filters.append(f"Contact_Type = '{contact_type}'")
+    @staticmethod
+    def delete(key):
 
-        if preferred_language:
-            filters.append(f"Preferred_Language = '{preferred_language}'")
+        RedisClient.get_client().delete(key)
 
-        if filters:
-            query += "\nWHERE " + " AND ".join(filters)
 
-        query += f"\nLIMIT {limit}"
 
-        return query
+
+
+        cache_key = build_key(...)
+
+cached = RedisService.get(cache_key)
+
+if cached:
+    return cached
+
+rows = DatabricksProvider.get_company_contacts(...)
+
+RedisService.set(
+    cache_key,
+    rows,
+    settings.redis_cache_ttl,
+)
+
+return rows
+
+
+
+class CacheKeys:
+
+    @staticmethod
+    def company_contacts(
+        company_case_safe_id,
+        sf_contact_id,
+        email,
+        contact_status,
+        contact_type,
+        preferred_language,
+        limit,
+    ):
+
+        return (
+            f"company_contacts:"
+            f"{company_case_safe_id}:"
+            f"{sf_contact_id}:"
+            f"{email}:"
+            f"{contact_status}:"
+            f"{contact_type}:"
+            f"{preferred_language}:"
+            f"{limit}"
+        )
