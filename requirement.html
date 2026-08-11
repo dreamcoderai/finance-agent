@@ -64,7 +64,21 @@ class CompanyContactRepository:
 
 
 
-
-        dism.exe /online /enable-feature /featurename:Microsoft-Windows-Subsystem-Linux /all /norestart
-
-        dism.exe /online /enable-feature /featurename:VirtualMachinePlatform /all /norestart
+query {
+  companyContacts(
+    companyCaseSafeId: "COMPANY123"
+    sfContactId: "CONTACT123"
+    email: "test@example.com"
+    contactStatus: "Active"
+    contactType: "Primary"
+    preferredLanguage: "English"
+    limit: 10
+  ) {
+    companyCaseSafeId
+    sfContactId
+    email
+    contactStatus
+    contactType
+    preferredLanguage
+  }
+}
