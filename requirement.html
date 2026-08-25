@@ -1,84 +1,61 @@
-from infrastructure.redis.cache_keys import CacheKeys
-from infrastructure.redis.redis_service import RedisService
+                         ┌──────────────────────┐
+                         │    REACT DASHBOARD   │
+                         │                      │
+                         │  Job List            │
+                         │  Job Status          │
+                         │  Pipeline Monitoring │
+                         │  Error Monitoring    │
+                         └──────────┬───────────┘
+                                    │
+                              REST API
+                                    │
+                                    ▼
+                         ┌──────────────────────┐
+                         │       XDATA-API      │
+                         │      FastAPI/Python  │
+                         │                      │
+                         │  REST APIs           │
+                         │  Authentication      │
+                         │  Job Management      │
+                         │  Status Management   │
+                         └──────────┬───────────┘
+                                    │
+                     ┌──────────────┴──────────────┐
+                     │                             │
+                     ▼                             ▼
+              ┌─────────────┐               ┌─────────────┐
+              │   Producer  │               │   Consumer  │
+              │             │               │             │
+              │ producer.py │               │ consumer.py │
+              └──────┬──────┘               └──────▲──────┘
+                     │                             │
+                     ▼                             │
+              ┌─────────────────────────────────────────┐
+              │               KAFKA                     │
+              │                                         │
+              │        xdata.job.events                 │
+              │                                         │
+              │   ┌──────────┐ ┌──────────┐             │
+              │   │Partition │ │Partition │ ...         │
+              │   └──────────┘ └──────────┘             │
+              └─────────────────────────────────────────┘
 
-class CompanyContactRepository:
-
-    @staticmethod
-    def get_company_contacts(
-        company_case_safe_id=None,
-        sf_contact_id=None,
-        email=None,
-        contact_status=None,
-        contact_type=None,
-        preferred_language=None,
-        limit=100,
-    ):
-
-        # --------------------------------------------------
-        # Build Cache Key
-        # --------------------------------------------------
-        cache_key = CacheKeys.build(
-            "company_contacts",
-            company_case_safe_id=company_case_safe_id,
-            sf_contact_id=sf_contact_id,
-            email=email,
-            contact_status=contact_status,
-            contact_type=contact_type,
-            preferred_language=preferred_language,
-            limit=limit,
-        )
-
-        # --------------------------------------------------
-        # Check Redis
-        # --------------------------------------------------
-        cached = RedisService.get(cache_key)
-
-        if cached is not None:
-            logger.info("Cache Hit : %s", cache_key)
-            return cached
-
-        logger.info("Cache Miss : %s", cache_key)
-
-        # --------------------------------------------------
-        # Fetch from Databricks
-        # --------------------------------------------------
-        rows = DatabricksProvider.get_company_contacts(
-            company_case_safe_id=company_case_safe_id,
-            sf_contact_id=sf_contact_id,
-            email=email,
-            contact_status=contact_status,
-            contact_type=contact_type,
-            preferred_language=preferred_language,
-            limit=limit,
-        )
-
-        # --------------------------------------------------
-        # Store in Redis
-        # --------------------------------------------------
-        RedisService.set(cache_key, rows)
-
-        logger.info("Stored %s rows in Redis.", len(rows))
-
-        return rows
-
-
-
-
-query {
-  companyContacts(
-    companyCaseSafeId: "COMPANY123"
-    sfContactId: "CONTACT123"
-    email: "test@example.com"
-    contactStatus: "Active"
-    contactType: "Primary"
-    preferredLanguage: "English"
-    limit: 10
-  ) {
-    companyCaseSafeId
-    sfContactId
-    email
-    contactStatus
-    contactType
-    preferredLanguage
-  }
-}
+config.py
+     │
+     ├── Kafka configuration
+     │
+topics.py
+     │
+     ├── Topic definitions
+     │
+serializer.py
+     │
+     ├── Serialize / Deserialize
+     │
+producer.py
+     │
+     ├── XData-API → Kafka
+     │
+consumer.py
+     │
+     └── Kafka → XData-API
