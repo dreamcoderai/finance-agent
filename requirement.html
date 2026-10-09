@@ -104,3 +104,31 @@ return (
     )}
   </div>
 );
+
+
+
+
+const ALLOWED_TABLEAU_ORIGINS = [
+  "https://dev-tableau.yourdomain.com",
+  "https://uat-tableau.yourdomain.com",
+  "https://tableau.yourdomain.com",
+];
+
+const getSafeTableauUrl = (value) => {
+  try {
+    if (!value) return undefined;
+
+    const url = new URL(value);
+
+    if (
+      url.protocol !== "https:" ||
+      !ALLOWED_TABLEAU_ORIGINS.includes(url.origin)
+    ) {
+      return undefined;
+    }
+
+    return url.href;
+  } catch {
+    return undefined;
+  }
+};
