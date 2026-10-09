@@ -59,3 +59,48 @@ producer.py
 consumer.py
      │
      └── Kafka → XData-API
+
+
+
+
+
+
+     
+
+
+const getSafeDownloadUrl = (value) => {
+  try {
+    const url = new URL(value, window.location.origin);
+
+    if (
+      url.origin !== window.location.origin ||
+      !["http:", "https:"].includes(url.protocol)
+    ) {
+      return undefined;
+    }
+
+    return url.href;
+  } catch {
+    return undefined;
+  }
+};
+
+
+
+const safeUrl = getSafeDownloadUrl(item?.downloadLink);
+
+return (
+  <div>
+    {item?.fileName}
+
+    {safeUrl && (
+      <a
+        href={safeUrl}
+        target="_blank"
+        rel="noopener noreferrer"
+      >
+        Download
+      </a>
+    )}
+  </div>
+);
