@@ -11,12 +11,10 @@ class SymbolService:
     ingestion pipelines.
     """
 
-    def __init__(self):
-        self.connection = databricks_connection.get_connection()
-
     def execute_query(self, query: str) -> pd.DataFrame:
 
-        cursor = self.connection.cursor()
+        # Connect on first use rather than at import/construction time.
+        cursor = databricks_connection.get_connection().cursor()
 
         cursor.execute(query)
 

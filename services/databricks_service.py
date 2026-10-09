@@ -1,6 +1,7 @@
 import pandas as pd
+from databricks.sql.exc import ServerOperationError
 
-from services.databricks_connection import databricks_connection
+from services.databricks_connection import DatabricksUnavailable, databricks_connection
 
 
 class DatabricksService:
@@ -8,23 +9,32 @@ class DatabricksService:
     Service for retrieving financial market data from Databricks Unity Catalog.
     """
 
-    def __init__(self):
-        self.connection = databricks_connection.get_connection()
-
     def execute_query(self, query: str) -> pd.DataFrame:
         """
         Executes a SQL query and returns a pandas DataFrame.
+
+        Raises DatabricksUnavailable when the warehouse can't be reached, so
+        the provider can fall back to Yahoo Finance.
         """
 
-        cursor = self.connection.cursor()
+        # Connects on first use (never at import), raises when unavailable.
+        connection = databricks_connection.get_connection()
 
-        cursor.execute(query)
-
-        rows = cursor.fetchall()
-
-        columns = [col[0] for col in cursor.description]
-
-        cursor.close()
+        try:
+            cursor = connection.cursor()
+            try:
+                cursor.execute(query)
+                rows = cursor.fetchall()
+                columns = [col[0] for col in cursor.description]
+            finally:
+                cursor.close()
+        except ServerOperationError:
+            # The query itself failed (e.g. a missing table); the warehouse is fine.
+            raise
+        except Exception as ex:
+            # Connection-level failure: the warehouse stopped or the session expired.
+            databricks_connection.mark_failed(ex)
+            raise DatabricksUnavailable(str(ex)[:300]) from ex
 
         return pd.DataFrame(rows, columns=columns)
 

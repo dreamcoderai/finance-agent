@@ -58,6 +58,9 @@ def format_source_badge(summary: dict):
             f"⚠️ Not found in {source_name}: {', '.join(sorted(symbols))}"
         )
 
+    if summary.get("databricks_unavailable"):
+        parts.append("ℹ️ Databricks warehouse unavailable — answered from Yahoo Finance")
+
     if not parts:
         return None
 
@@ -82,7 +85,8 @@ with st.sidebar:
         list(DATA_SOURCE_MODES.keys()),
         index=0,
         help=(
-            "Auto tries Databricks first and falls back to Yahoo. Each "
+            "Auto tries Databricks first and falls back to Yahoo. If the "
+            "Databricks warehouse is down, Yahoo answers in every mode. Each "
             "answer shows which source actually served the data."
         ),
     )

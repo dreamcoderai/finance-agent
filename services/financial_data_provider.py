@@ -1,9 +1,13 @@
+import logging
 from enum import Enum
 
 import pandas as pd
 
+from services.databricks_connection import DatabricksUnavailable
 from services.databricks_service import DatabricksService
 from services.market_data import MarketDataService
+
+logger = logging.getLogger(__name__)
 
 
 class DataSource(Enum):
@@ -20,6 +24,10 @@ class FinancialDataProvider:
         AUTO        -> Databricks first, fallback to Yahoo
         DATABRICKS -> Only Databricks
         YAHOO       -> Only Yahoo Finance
+
+    If the Databricks warehouse can't be reached (stopped, quota, network),
+    every mode answers from Yahoo instead of failing, and the source log
+    marks the call as a fallback.
     """
 
     def __init__(self, source=DataSource.AUTO):
@@ -51,16 +59,19 @@ class FinancialDataProvider:
         """Clear the source log (call at the start of each request)."""
         self.source_log = []
 
-    def _record(self, method_name: str, label, served, attempted: str):
+    def _record(self, method_name: str, label, served, attempted: str,
+                databricks_down: bool = False):
         # served: the backend that returned data ("databricks"/"yahoo") or
         # None when no data was found. attempted: which backend(s) were
         # actually queried, so a miss can still name its source.
+        # databricks_down: Databricks was unreachable and Yahoo stood in.
         self.source_log.append(
             {
                 "method": method_name,
                 "symbol": label,
                 "source": served,
                 "attempted": attempted,
+                "databricks_down": databricks_down,
             }
         )
 
@@ -96,6 +107,10 @@ class FinancialDataProvider:
             "yahoo": yahoo,
             "not_found": not_found,
             "sources": sources,
+            # True when Databricks was unreachable for any call this request.
+            "databricks_unavailable": any(
+                e.get("databricks_down") for e in self.source_log
+            ),
         }
 
     ####################################################################
@@ -119,6 +134,25 @@ class FinancialDataProvider:
 
         return False
 
+    def _from_databricks(self, method_name: str, *args, **kwargs):
+        """
+        (result, unavailable). unavailable is True when the warehouse could
+        not be reached; any other error is treated as "no data" so a single
+        failed query never interrupts the answer.
+        """
+
+        try:
+            return getattr(self.db, method_name)(*args, **kwargs), False
+        except DatabricksUnavailable as ex:
+            logger.warning("Databricks unavailable for %s: %s", method_name, ex)
+            return None, True
+        except Exception as ex:
+            logger.warning("Databricks query failed for %s: %s", method_name, ex)
+            return None, False
+
+    def _from_yahoo(self, method_name: str, *args, **kwargs):
+        return getattr(self.yahoo, method_name)(*args, **kwargs)
+
     def _fetch(self, method_name: str, *args, **kwargs):
         """
         Generic fetch method.
@@ -127,7 +161,7 @@ class FinancialDataProvider:
             Databricks -> Yahoo
 
         DATABRICKS:
-            Databricks only
+            Databricks only (Yahoo if the warehouse is unreachable)
 
         YAHOO:
             Yahoo only
@@ -135,32 +169,31 @@ class FinancialDataProvider:
 
         label = args[0] if args else None
 
-        if self.source == DataSource.DATABRICKS:
-            result = getattr(self.db, method_name)(*args, **kwargs)
-            served = "databricks" if not self._is_empty(result) else None
-            self._record(method_name, label, served, attempted="databricks")
-            return result
-
         if self.source == DataSource.YAHOO:
-            result = getattr(self.yahoo, method_name)(*args, **kwargs)
+            result = self._from_yahoo(method_name, *args, **kwargs)
             served = "yahoo" if not self._is_empty(result) else None
             self._record(method_name, label, served, attempted="yahoo")
             return result
 
-        # AUTO MODE: Databricks first, fall back to Yahoo.
+        result, down = self._from_databricks(method_name, *args, **kwargs)
 
-        result = getattr(self.db, method_name)(*args, **kwargs)
-
-        if not self._is_empty(result):
+        if not down and not self._is_empty(result):
             self._record(
                 method_name, label, "databricks", attempted="databricks"
             )
             return result
 
-        result = getattr(self.yahoo, method_name)(*args, **kwargs)
+        if self.source == DataSource.DATABRICKS and not down:
+            # Databricks answered but has no data: stay Databricks-only.
+            self._record(method_name, label, None, attempted="databricks")
+            return result
+
+        # AUTO miss, or the warehouse is down in any mode: use Yahoo.
+        result = self._from_yahoo(method_name, *args, **kwargs)
         served = "yahoo" if not self._is_empty(result) else None
         self._record(
-            method_name, label, served, attempted="databricks+yahoo"
+            method_name, label, served, attempted="databricks+yahoo",
+            databricks_down=down,
         )
         return result
 
